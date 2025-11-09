@@ -1,9 +1,8 @@
--- Stored Procedure
+-- Stored Procedures
+
 -- Returns all rentals, payments, and refunds for that customer.
 -- Purpose: It makes it easier to view customer history by pulling all the important transaction data in just one request. 
-This helps keep the data consistent and reduces mistakes or differences that can happen when running several manual queries or using extra logic in the app.
-
-
+-- This helps keep the data consistent and reduces mistakes or differences that can happen when running several manual queries or using extra logic in the app.
 
 IF OBJECT_ID('dbo.sp_GetCustomerRentalHistory') IS NOT NULL
 DROP PROCEDURE dbo.sp_GetCustomerRentalHistory

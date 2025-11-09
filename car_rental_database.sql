@@ -493,9 +493,9 @@ GO
 
 CREATE TABLE Rental.Rental (
     rental_id INT IDENTITY(1,1) PRIMARY KEY,
-    reservation_id INT NULL,                    -- Will link to Reservation later
+    reservation_id INT NOT NULL,                -- FK to Rental.Reservation
     customer_id INT NOT NULL,                   -- FK to Customer.Customer
-    vehicle_vin VARCHAR(17) NOT NULL,              -- FK to Vehicle.Vehicle
+    vehicle_vin VARCHAR(17) NOT NULL,           -- FK to Vehicle.Vehicle
     rental_start DATETIME NOT NULL,
     rental_end DATETIME NOT NULL,
     total_mileage_used DECIMAL(10,2) NULL,
@@ -506,13 +506,21 @@ CREATE TABLE Rental.Rental (
     rental_acknowledgement_signed BIT NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL DEFAULT GETDATE(),
 
-    CONSTRAINT FK_Rental_Customer FOREIGN KEY (customer_id)
+    
+    CONSTRAINT FK_Rental_Customer FOREIGN KEY (customer_id)  
         REFERENCES Customer.Customer(customer_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
+        ON DELETE NO ACTION ON UPDATE CASCADE,
 
-    CONSTRAINT FK_Rental_Vehicle FOREIGN KEY (vehicle_vin)
+    CONSTRAINT FK_Rental_Vehicle FOREIGN KEY (vehicle_vin) 
         REFERENCES Vehicle.Vehicle(vehicle_vin)
-        ON DELETE CASCADE ON UPDATE CASCADE
+        ON DELETE NO ACTION ON UPDATE CASCADE,
+
+    CONSTRAINT FK_Rental_Reservation FOREIGN KEY (reservation_id) 
+        REFERENCES Rental.Reservation(reservation_id)
+        ON DELETE NO ACTION ON UPDATE CASCADE,
+
+    -- Ensrues 1:1 relationship with Reservation
+    CONSTRAINT UQ_Rental_Reservation UNIQUE (reservation_id)
 );
 GO
 
