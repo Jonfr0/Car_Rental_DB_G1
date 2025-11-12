@@ -1,4 +1,4 @@
-USE CarRentalDB;
+USE CarRent;
 GO
 
 -- Create Schemas. We are not dropping any schemas or tables
@@ -14,6 +14,7 @@ GO
 CREATE SCHEMA Rental;
 GO
 
+
 --------------------------------------------------------
 -- Creating Branch Table Under Operations Schema
 --------------------------------------------------------
@@ -26,6 +27,7 @@ CREATE TABLE Operation.Branch (
     branch_status VARCHAR(20) NOT NULL DEFAULT 'Active'
 );
 GO
+
 
 --------------------------------------------------------
 -- Insert Sample Data into Operations.Branch
@@ -64,6 +66,7 @@ VALUES
 ('Cayman Islands Airport', 'Airport', '345-555-2231', 'cay_airport@carrental.com', 'Active');
 GO
 
+
 -------------------------------------------------------
 -- Create Customer Table Under Customer Schema.
 --------------------------------------------------------
@@ -78,6 +81,7 @@ CREATE TABLE Customer.Customer (
     gender VARCHAR(10) CHECK (gender IN ('Male','Female','Other'))
 );
 GO
+
 
 --------------------------------------------------------
 -- Insert Sample Data into Customer.Customer
@@ -116,6 +120,7 @@ VALUES
 ('Grace', 'Marie', 'Roberts', '320-555-9821', 'grace.roberts@email.com', '1994-01-03', 'Female');
 GO
 
+
 --------------------------------------------------------
 -- Create Vehicle_Purchase Table
 --------------------------------------------------------
@@ -127,6 +132,7 @@ CREATE TABLE Vehicle.Vehicle_Purchase (
     purchase_price DECIMAL(10,2) NOT NULL
 );
 GO
+
 
 --------------------------------------------------------
 -- Insert Sample Data into Vehicle.Vehicle_Purchase
@@ -165,6 +171,7 @@ VALUES
 ('2025-05-01', 'Outright', 'Tesla Store Los Angeles', 59000.00);
 GO
 
+
 --------------------------------------------------------
 -- Create Vehicle_Fuel_Type Table in Vehicle_Schema
 --------------------------------------------------------
@@ -174,6 +181,7 @@ CREATE TABLE Vehicle.Fuel_Type (
     fuel_efficiency DECIMAL(5,2) NOT NULL
 );
 GO
+
 
 --------------------------------------------------------
 -- Insert Sample Data into Vehicle.Fuel_Type
@@ -190,6 +198,7 @@ VALUES
 ('Hydrogen Fuel Cell', 65.00);     -- Future EV tech
 GO
 
+
 --------------------------------------------------------
 -- Create Vehicle_Type Table
 --------------------------------------------------------
@@ -198,6 +207,7 @@ CREATE TABLE Vehicle.Vehicle_Type (
     vehicle_type_name VARCHAR(30) NOT NULL
 );
 GO
+
 
 --------------------------------------------------------
 -- Insert Sample Data into Vehicle.Vehicle_Type
@@ -213,6 +223,7 @@ VALUES
 ('Coupe');          -- 7
 GO
 
+
 --------------------------------------------------------
 -- Create Vehicle_Class Table
 --------------------------------------------------------
@@ -221,6 +232,7 @@ CREATE TABLE Vehicle.Vehicle_Class (
     class_name VARCHAR(30) NOT NULL
 );
 GO
+
 
 --------------------------------------------------------
 -- Insert Sample Data into Vehicle.Vehicle_Class
@@ -240,7 +252,8 @@ GO
 -- Create Vehicle Table
 --------------------------------------------------------
 CREATE TABLE Vehicle.Vehicle (
-    vehicle_vin VARCHAR(17) PRIMARY KEY,
+    vehicle_id INT IDENTITY(1,1) PRIMARY KEY,
+    vehicle_vin VARCHAR(17) NOT NULL,
     vehicle_class_id INT NOT NULL,
     vehicle_type_id INT NOT NULL,
     fuel_type_id INT NOT NULL,
@@ -254,6 +267,7 @@ CREATE TABLE Vehicle.Vehicle (
     mileage DECIMAL(10,2) NOT NULL,
     created_at DATETIME NOT NULL DEFAULT GETDATE(),
     updated_at DATETIME NULL,
+
 
     CONSTRAINT FK_Vehicle_Class FOREIGN KEY (vehicle_class_id) REFERENCES Vehicle.Vehicle_Class(vehicle_class_id),
     CONSTRAINT FK_Vehicle_Type FOREIGN KEY (vehicle_type_id) REFERENCES Vehicle.Vehicle_Type(vehicle_type_id),
@@ -316,107 +330,109 @@ CREATE TABLE Finance.Vehicle_Rate (
     vehicle_weekly_rate DECIMAL(10,2) NULL,
     vehicle_monthly_rate DECIMAL(10,2) NULL,
 
-    CONSTRAINT FK_vehicle_rate_vehicle_class 
+
+    CONSTRAINT FK_vehicle_rate_vehicle_class
         FOREIGN KEY (vehicle_class_id) REFERENCES Vehicle.Vehicle_Class(vehicle_class_id),
 
-    CONSTRAINT FK_vehicle_rate_branch 
+
+    CONSTRAINT FK_vehicle_rate_branch
         FOREIGN KEY (branch_id) REFERENCES Operation.Branch(branch_id)
 );
 GO
 
---------------------------------------------------------
--- Insert Sample Data into Finance.Vehicle_Rate
---------------------------------------------------------
-INSERT INTO Finance.Vehicle_Rate
-(vehicle_class_id, branch_id, vehicle_hourly_rate, vehicle_daily_rate, vehicle_weekly_rate, vehicle_monthly_rate)
-VALUES
-(1, 1, 12.00, 65.00, 380.00, 1450.00),
-(2, 2, 13.50, 72.00, 420.00, 1580.00),
-(3, 3, 15.00, 80.00, 465.00, 1700.00),
-(4, 4, 17.00, 89.00, 500.00, 1850.00),
-(5, 5, 18.50, 95.00, 525.00, 1950.00),
-(6, 6, 21.00, 110.00, 630.00, 2250.00),
-(7, 7, 25.00, 135.00, 780.00, 2600.00),
-(1, 8, 11.50, 63.00, 375.00, 1400.00),
-(2, 9, 13.00, 70.00, 410.00, 1550.00),
-(3, 10, 14.00, 77.00, 445.00, 1675.00),
-(4, 11, 16.50, 88.00, 495.00, 1820.00),
-(5, 12, 18.00, 93.00, 520.00, 1900.00),
-(6, 13, 21.50, 112.00, 640.00, 2280.00),
-(7, 14, 26.00, 140.00, 790.00, 2650.00),
-(1, 15, 12.25, 65.00, 385.00, 1460.00),
-(2, 16, 13.75, 73.00, 430.00, 1600.00),
-(3, 17, 15.50, 81.00, 470.00, 1720.00),
-(4, 18, 17.25, 90.00, 505.00, 1875.00),
-(5, 19, 18.75, 96.00, 530.00, 1975.00),
-(6, 20, 21.25, 111.00, 635.00, 2260.00),
-(7, 21, 25.50, 137.00, 785.00, 2625.00),
-(1, 22, 12.10, 64.00, 382.00, NULL),
-(2, 23, 13.60, 71.00, 425.00, 1590.00),
-(3, 24, 15.10, 79.00, NULL, 1710.00),
-(4, 25, 17.10, 88.50, 498.00, 1855.00),
-(5, 26, 18.60, 94.50, 523.00, NULL),
-(6, 27, 21.10, 109.00, 628.00, 2240.00),
-(7, 28, 25.20, 136.00, 782.00, 2610.00),
-(3, 29, 14.80, 78.00, 450.00, 1690.00),
-(4, 30, 16.80, 89.00, 499.00, 1840.00);
+
+------------------------------------------------------------
+-- Insert Data to the Vehicle.Vehicle_Rate Table
+---------------------------------------------------------
+-- Inserting data into Finance.Vehicle_Rate tables. All the prices for each branches and each vehicle class will
+-- be calculated automatically. Currently, each branch has 7 different vehicle class. The base rate of  vehicle
+-- is used to modify the rates for hourly, daily, weekly, and monthly. The rules for dynamic pricing has been        
+-- included below in the comments.
+---------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------
+-- Creating usp_Generate_Vehicle_Rates, to automatically generate vehicle rental rates for ever (Branch * Vehicle)
+-------------------------------------------------------------
+CREATE PROCEDURE Finance.usp_Generate_Vehicle_Rates
+AS
+BEGIN
+   
+    SET NOCOUNT ON;
+
+
+    ---------------------------------------------------------
+    -- 3. Insert vehicle rate records for each
+    --    (Vehicle Class × Branch) combination
+    --    using CROSS JOIN to generate all pairs.
+   
+    --    CROSS APPLY
+    --      - Vehicle class base price
+    --      - Branch type multiplier (Airport/City/Suburban)
+    ---------------------------------------------------------
+    INSERT INTO Finance.Vehicle_Rate
+    (
+        vehicle_class_id,
+        branch_id,
+        vehicle_hourly_rate,
+        vehicle_daily_rate,
+        vehicle_weekly_rate,
+        vehicle_monthly_rate
+    )
+    SELECT
+        vc.vehicle_class_id,
+        b.branch_id,
+
+
+        -- Derived rates calculated dynamically
+        ROUND(base_rate * multiplier / 5.0, 2)  AS vehicle_hourly_rate,
+        ROUND(base_rate * multiplier, 2)        AS vehicle_daily_rate,
+        ROUND(base_rate * multiplier * 5.5, 2)  AS vehicle_weekly_rate,
+        ROUND(base_rate * multiplier * 22, 2)   AS vehicle_monthly_rate
+
+
+    FROM Vehicle.Vehicle_Class vc
+    CROSS JOIN Operation.Branch b  -- Generate all class × branch combinations
+
+
+    ---------------------------------------------------------
+    -- 4. Defines base rate and multiplier logic per to apply the rates differenty based on the location.
+    -- In our case, Airports cost 1.2 times of the base rate, and suburban are 0.90 times of the base rate,
+    -- while the cities are flat base rate.
+    ---------------------------------------------------------
+    CROSS APPLY (
+        SELECT
+            -- Base rate determined by vehicle class
+            CASE vc.vehicle_class_id
+                WHEN 1 THEN 60.00   -- Economy
+                WHEN 2 THEN 70.00   -- Compact
+                WHEN 3 THEN 80.00   -- Standard
+                WHEN 4 THEN 90.00   -- Full-size
+                WHEN 5 THEN 100.00  -- SUV
+                WHEN 6 THEN 140.00  -- Luxury
+                WHEN 7 THEN 120.00  -- Truck / Van
+                ELSE 70.00
+            END AS base_rate,
+
+
+            -- Branch type multiplier (Airport costs more, Suburban less)
+            CASE b.branch_type
+                WHEN 'Airport'  THEN 1.20
+                WHEN 'Suburban' THEN 0.90
+                ELSE 1.00       -- Default for City branches
+            END AS multiplier
+    ) rate_logic;
+END;
 GO
 
---------------------------------------------------------
--- Create a Rental_Estimate table under Finance Schema
---------------------------------------------------------
 
-CREATE TABLE Finance.Rental_Estimate (
-    estimate_id INT IDENTITY(1,1) PRIMARY KEY,
-    vehicle_rate_id INT NOT NULL,
-    base_rate DECIMAL(10,2) NOT NULL,
-    surcharge_total DECIMAL(10,2) NULL,
-    discount_total DECIMAL(10,2) NULL,
-    tax_total DECIMAL(10,2) NULL,
-    total_estimate DECIMAL(10,2) NOT NULL,
+------------------------------------------------------------------------------------------
+-- Executing this stored procedure will enter the 609 vehicle rates.
+-- 7 vehicle class * 30 branches = 210 different vehcile rates, which is based on branch and
+-- vehicle class.
+--------------------------------------------------------------------------------------------
+EXEC Finance.usp_Generate_Vehicle_Rates;
 
-    CONSTRAINT FK_rental_estimate_vehicle_rate
-        FOREIGN KEY (vehicle_rate_id) REFERENCES Finance.Vehicle_Rate(vehicle_rate_id)
-);
-GO
-
---------------------------------------------------------
--- Insert Sample Data into Finance.Rental_Estimate
---------------------------------------------------------
-INSERT INTO Finance.Rental_Estimate
-(vehicle_rate_id, base_rate, surcharge_total, discount_total, tax_total, total_estimate)
-VALUES
-(1, 65.00, 5.00, 0.00, 4.68, 74.68),
-(2, 72.00, 6.50, 2.00, 5.04, 81.54),
-(3, 80.00, 4.00, 3.50, 5.80, 86.30),
-(4, 89.00, NULL, 5.00, 6.23, 90.23),
-(5, 95.00, 6.00, 0.00, 6.65, 107.65),
-(6, 110.00, 7.50, 4.00, 8.33, 121.83),
-(7, 135.00, 10.00, 7.50, 10.12, 147.62),
-(8, 63.00, 3.00, NULL, 4.41, 70.41),
-(9, 70.00, 5.00, 2.00, 4.90, 77.90),
-(10, 77.00, 6.00, 0.00, 5.39, 88.39),
-(11, 88.00, 5.50, 1.50, 6.11, 98.11),
-(12, 93.00, 4.00, 0.00, 6.45, 103.45),
-(13, 112.00, 7.00, 4.00, 8.09, 123.09),
-(14, 140.00, 9.00, 6.00, 9.73, 152.73),
-(15, 65.00, 4.00, 0.00, 4.55, 73.55),
-(16, 73.00, 5.00, 1.00, 5.11, 82.11),
-(17, 81.00, 5.50, 2.50, 5.68, 89.68),
-(18, 90.00, 6.00, NULL, 6.21, 102.21),
-(19, 96.00, 6.50, 0.00, 6.67, 109.17),
-(20, 111.00, 7.50, 4.50, 8.03, 122.03),
-(21, 137.00, 10.00, 6.00, 9.91, 150.91),
-(22, 64.00, 4.00, 1.00, 4.48, 71.48),
-(23, 71.00, 5.00, 0.00, 5.02, 81.02),
-(24, 79.00, 6.00, NULL, 5.56, 90.56),
-(25, 88.50, 5.00, 2.50, 6.11, 97.11),
-(26, 94.50, 6.00, 0.00, 6.52, 107.02),
-(27, 109.00, 8.00, 4.00, 7.80, 120.80),
-(28, 136.00, 9.00, 7.00, 9.52, 147.52),
-(29, 78.00, 5.00, 2.00, 5.46, 86.46),
-(30, 89.00, 6.00, NULL, 6.23, 101.23);
-GO
 
 --------------------------------------------------------
 -- Create Reservation Table under Rental Schema
@@ -424,139 +440,956 @@ GO
 CREATE TABLE Rental.Reservation (
     reservation_id INT IDENTITY(1,1) PRIMARY KEY,
     customer_id INT NOT NULL,
-    vehicle_vin VARCHAR(17) NOT NULL,
-    estimate_id INT NOT NULL,
+    vehicle_id INT NOT NULL,
     pickup_branch_id INT NOT NULL,
-    dropoff_branch_id INT NOT NULL,
-    reservation_date DATE NOT NULL DEFAULT CAST(GETDATE() AS DATE),
-    pickup_date DATE NOT NULL,
-    return_date DATE NOT NULL,
-    reservation_status VARCHAR(20) NOT NULL CHECK (reservation_status IN ('Pending','Confirmed','Cancelled','Completed')),
+    dropoff_branch_id INT NULL,
+    reservation_date DATETIME NOT NULL DEFAULT GETDATE(),
+    pickup_datetime DATETIME NOT NULL,
+    return_datetime DATETIME NOT NULL,
+    rental_duration_type VARCHAR(10) NOT NULL
+        CHECK (rental_duration_type IN ('Hourly', 'Daily', 'Weekly', 'Monthly')),
+    reservation_status VARCHAR(20) NOT NULL
+        CHECK (reservation_status IN ('Pending','Confirmed','Cancelled','Completed')),
     confirmation_number VARCHAR(20) NOT NULL UNIQUE,
     created_at DATETIME NOT NULL DEFAULT GETDATE(),
-    updated_at DATETIME NOT NULL DEFAULT GETDATE(),
-
+    updated_at DATETIME NULL,
     CONSTRAINT FK_reservation_customer
         FOREIGN KEY (customer_id) REFERENCES Customer.Customer(customer_id),
-
     CONSTRAINT FK_reservation_vehicle
-        FOREIGN KEY (vehicle_vin) REFERENCES Vehicle.Vehicle(vehicle_vin),
-
-    CONSTRAINT FK_reservation_estimate
-        FOREIGN KEY (estimate_id) REFERENCES Finance.Rental_Estimate(estimate_id),
-
+        FOREIGN KEY (vehicle_id) REFERENCES Vehicle.Vehicle(vehicle_id),
     CONSTRAINT FK_reservation_pickup_branch
         FOREIGN KEY (pickup_branch_id) REFERENCES Operation.Branch(branch_id),
-
     CONSTRAINT FK_reservation_dropoff_branch
-        FOREIGN KEY (dropoff_branch_id) REFERENCES Operation.Branch(branch_id)
+        FOREIGN KEY (dropoff_branch_id) REFERENCES Operation.Branch(branch_id),
+    CONSTRAINT CK_reservation_return_after_pickup
+        CHECK (return_datetime > pickup_datetime)
 );
 GO
 
 --------------------------------------------------------
--- Insert Sample Data into Rental.Reservation
+-- Create Finance.Rental_Estimate Table (Updated)
 --------------------------------------------------------
-INSERT INTO Rental.Reservation
-(customer_id, vehicle_vin, estimate_id, pickup_branch_id, dropoff_branch_id,
- pickup_date, return_date, reservation_status, confirmation_number)
-VALUES
-(1, '1HGCM82633A004352', 1, 1, 3, '2025-03-02', '2025-03-05', 'Completed', 'CNF0001'),
-(2, '2T1BURHE5KC012457', 2, 2, 2, '2025-03-07', '2025-03-10', 'Completed', 'CNF0002'),
-(3, '1FADP3F25HL220956', 3, 5, 8, '2025-03-12', '2025-03-15', 'Confirmed', 'CNF0003'),
-(4, '1FTFW1E52JKC20230', 4, 4, 6, '2025-03-20', '2025-03-25', 'Completed', 'CNF0004'),
-(5, '1C4PJMDX8LD507962', 5, 9, 10, '2025-03-26', '2025-03-30', 'Cancelled', 'CNF0005'),
-(6, '5NPE24AF4KH887345', 6, 12, 12, '2025-04-01', '2025-04-05', 'Completed', 'CNF0006'),
-(7, '3VW2B7AJ5EM384910', 7, 7, 9, '2025-04-08', '2025-04-10', 'Completed', 'CNF0007'),
-(8, '1HGCV1F32MA003842', 8, 15, 17, '2025-04-12', '2025-04-14', 'Confirmed', 'CNF0008'),
-(9, '1N4AL3AP9JC149782', 9, 14, 13, '2025-04-15', '2025-04-18', 'Completed', 'CNF0009'),
-(10, '2HGFC2F52KH568931', 10, 10, 9, '2025-04-20', '2025-04-23', 'Pending', 'CNF0010'),
-(11, '1FAFP404X2F224319', 11, 5, 4, '2025-04-25', '2025-04-29', 'Confirmed', 'CNF0011'),
-(12, '1FTCR10A5RUB47283', 12, 8, 8, '2025-04-30', '2025-05-03', 'Cancelled', 'CNF0012'),
-(13, '5UXWX9C55H0T41597', 13, 6, 6, '2025-05-04', '2025-05-08', 'Confirmed', 'CNF0013'),
-(14, 'WBA3A5C56CF207894', 14, 3, 3, '2025-05-10', '2025-05-13', 'Completed', 'CNF0014'),
-(15, '1N6AA1F41GN520843', 15, 9, 11, '2025-05-14', '2025-05-16', 'Confirmed', 'CNF0015'),
-(16, '3FA6P0H76HR377420', 16, 2, 1, '2025-05-18', '2025-05-21', 'Completed', 'CNF0016'),
-(17, '4T1BE46K19U387462', 17, 13, 13, '2025-05-23', '2025-05-26', 'Pending', 'CNF0017'),
-(18, '1G1ZD5ST7LF031290', 18, 11, 15, '2025-05-28', '2025-05-31', 'Completed', 'CNF0018'),
-(19, '3GNAXHEV8LS694531', 19, 16, 18, '2025-06-02', '2025-06-05', 'Confirmed', 'CNF0019'),
-(20, '1FT7W2BT7KEC03495', 20, 10, 9, '2025-06-08', '2025-06-12', 'Cancelled', 'CNF0020'),
-(21, '1C4HJXDG1LW268953', 21, 1, 4, '2025-06-14', '2025-06-18', 'Completed', 'CNF0021'),
-(22, '5FNRL6H73NB098342', 22, 3, 3, '2025-06-20', '2025-06-23', 'Confirmed', 'CNF0022'),
-(23, '1FTYR10C8XTA01823', 23, 4, 7, '2025-06-25', '2025-06-27', 'Completed', 'CNF0023'),
-(24, '5YJSA1CN5DFP23451', 24, 5, 5, '2025-06-29', '2025-07-02', 'Confirmed', 'CNF0024'),
-(25, '5YJ3E1EA7KF275613', 25, 8, 8, '2025-07-03', '2025-07-05', 'Pending', 'CNF0025');
+CREATE TABLE Finance.Rental_Estimate (
+    estimate_id INT IDENTITY(1,1) PRIMARY KEY,
+
+    -- Foreign Keys
+    reservation_id INT NOT NULL,       -- Added FK to Rental.Reservation
+    vehicle_rate_id INT NOT NULL,      -- FK to Finance.Vehicle_Rate
+
+    -- Financial Fields
+    base_rate DECIMAL(10,2) NOT NULL,
+    surcharge_total DECIMAL(10,2) NULL DEFAULT 0.00,
+    discount_total DECIMAL(10,2) NULL DEFAULT 0.00,
+    tax_total DECIMAL(10,2) NULL DEFAULT 0.00,
+    total_estimate AS 
+        (base_rate + ISNULL(surcharge_total,0) - ISNULL(discount_total,0) + ISNULL(tax_total,0)) PERSISTED,
+
+    created_at DATETIME NOT NULL DEFAULT GETDATE(),
+
+    --------------------------------------------------------
+    -- Foreign Key Constraints
+    --------------------------------------------------------
+    CONSTRAINT FK_rental_estimate_reservation
+        FOREIGN KEY (reservation_id)
+        REFERENCES Rental.Reservation(reservation_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+
+    CONSTRAINT FK_rental_estimate_vehicle_rate
+        FOREIGN KEY (vehicle_rate_id)
+        REFERENCES Finance.Vehicle_Rate(vehicle_rate_id)
+        ON DELETE NO ACTION ON UPDATE CASCADE
+);
 GO
 
 --------------------------------------------------------
--- Create Rental Table under Rental Schema
+-- Create Charge_Type Table under Finance Schema
+--------------------------------------------------------
+CREATE TABLE Finance.Charge_Type (
+    charge_type_id INT IDENTITY(1,1) PRIMARY KEY,
+    charge_code VARCHAR(10) NOT NULL UNIQUE,       -- e.g., 'BASE', 'GPS', 'INS'
+    charge_name VARCHAR(50) NOT NULL,              -- Descriptive name
+    charge_category VARCHAR(30) NULL,              -- e.g., 'Rental', 'Insurance', 'Fee'
+    charge_basis VARCHAR(30) NULL,                 -- e.g., 'Per Day', 'Flat Rate', 'Per Hour'
+
+
+    CONSTRAINT CK_ChargeType_Basis CHECK (
+        charge_basis IN ('Per Day','Per Hour','Flat Rate','Per Week','Per Month')
+        OR charge_basis IS NULL
+    )
+);
+GO
+
+
+--------------------------------------------------------
+-- Insert Sample Data into Finance.Charge_Type (1–12 Records)
 --------------------------------------------------------
 
+INSERT INTO Finance.Charge_Type
+(charge_code, charge_name, charge_category, charge_basis)
+VALUES
+('GPS', 'GPS Navigation System', 'Add-On', 'Flat Rate'),
+('INS', 'Insurance Coverage', 'Insurance', 'Per Day'),
+('CDW', 'Collision Damage Waiver', 'Insurance', 'Per Day'),
+('CHSEAT', 'Child Seat', 'Add-On', 'Flat Rate'),
+('FUEL', 'Fuel Refill Fee', 'Fee', 'Flat Rate'),
+('LUX', 'Luxury Vehicle Surcharge', 'Surcharge', 'Per Day'),
+('ROADS', 'Roadside Assistance', 'Add-On', 'Flat Rate'),
+('CLEAN', 'Cleaning Fee', 'Fee', 'Flat Rate'),
+('DELAY', 'Late Return Penalty', 'Fee', 'Per Hour'),
+('ELEC', 'Electric Vehicle Charging', 'Usage', 'Per Hour'),
+('ENV', 'Environmental Fee', 'Fee', 'Flat Rate'),
+('ONEWAY', 'One Way Rental Fee', 'Fee', 'Flat Rate');
+GO
+
+--------------------------------------------------------
+-- Create Charge_Rate Table under Finance Schema
+--------------------------------------------------------
+CREATE TABLE Finance.Charge_Rate (
+    charge_rate_id INT IDENTITY(1,1) PRIMARY KEY,
+    charge_type_id INT NOT NULL,
+    charge_unit_rate DECIMAL(10,2) NOT NULL CHECK (charge_unit_rate >=0),
+    effective_start_date DATE NOT NULL DEFAULT GETDATE(),
+    effective_end_date DATE NULL,
+    created_at DATETIME NOT NULL DEFAULT GETDATE(),
+    updated_at DATETIME NULL,
+
+
+CONSTRAINT FK_ChargeRate_ChargeType
+        FOREIGN KEY (charge_type_id)
+        REFERENCES Finance.Charge_Type(charge_type_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+GO
+
+--------------------------------------------------------
+-- Insert the Charge Rates into into Finance.Rental_Charge
+-- The charge rates are uniform across all the branches
+-------------------------------------------------------
+INSERT INTO Finance.Charge_Rate 
+(charge_type_id, charge_unit_rate, effective_start_date, effective_end_date)
+VALUES
+(1, 14.99, '2025-01-01', NULL),   -- GPS Navigation System
+(2, 19.99, '2025-01-01', NULL),   -- Insurance Coverage
+(3, 29.99, '2025-01-01', NULL),   -- Collision Damage Waiver
+(4, 9.99,  '2025-01-01', NULL),   -- Child Seat
+(5, 5.00,  '2025-01-01', NULL),   -- Fuel Refill Fee
+(6, 35.00, '2025-01-01', NULL),   -- Luxury Vehicle Surcharge
+(7, 12.00, '2025-01-01', NULL),   -- Roadside Assistance
+(8, 15.00, '2025-01-01', NULL),   -- Cleaning Fee
+(9, 25.00,'2025-01-01', NULL),   -- Late Return Penalty
+(10, 10.00,'2025-01-01', NULL),   -- Electric Vehicle Charging (per hour)
+(11, 7.50, '2025-01-01', NULL),   -- Environmental Fee
+(12, 100.00, '2025-01-01', NULL); -- One Way Rental Fee
+GO
+
+---------------------
+-- Create a Reservation_Charge table (Bridge table between Reservation and Charge_Rate)
+----------------
+
+CREATE TABLE Rental.Reservation_Charge (
+    reservation_charge_id INT IDENTITY(1,1) PRIMARY KEY, 
+    reservation_id INT NOT NULL,                         -- FK to Rental.Reservation
+    charge_rate_id INT NOT NULL,                        -- FK to Finance.Charge_Rate (each possible add-on)
+    quantity INT NOT NULL DEFAULT 0,                     -- How many of this add-on? (default: 0)
+    -- Foreign keys for referential integrity:
+    CONSTRAINT FK_ResCharge_Reservation FOREIGN KEY (reservation_id) REFERENCES Rental.Reservation(reservation_id),
+    CONSTRAINT FK_ResCharge_ChargeRate FOREIGN KEY (charge_rate_id) REFERENCES Finance.Charge_Rate(charge_rate_id)
+);
+GO
+
+
+----------------------------------
+-- Create Finance.Tax_Type table to store different tax types
+------------------------------------------------
+
+
+CREATE TABLE Finance.Tax_Type (
+    tax_type_id INT IDENTITY(1,1) PRIMARY KEY,
+    tax_code VARCHAR(10) NOT NULL UNIQUE,      -- e.g., STATE, CITY, ENV, TOUR
+    tax_name VARCHAR(50) NOT NULL,             -- e.g., 'State Tax', 'City Tax'
+    tax_description VARCHAR(150) NULL
+);
+GO
+
+----------------------------------
+-- Insert Values into Finance.Tax_Type Table - 9 tables 
+------------------------------------------------
+
+
+INSERT INTO Finance.Tax_Type (tax_code, tax_name, tax_description)
+VALUES
+('STATE', 'State Tax', 'Standard state vehicle rental tax applied per state'),
+('CITY', 'City Tax', 'Local transportation or municipal surcharge'),
+('ENV', 'Environmental Fee', 'Eco or green sustainability surcharge'),
+('TOUR', 'Tourism Tax', 'Applies to tourist rental zones'),
+('LOCAL', 'Local Tax', 'Minor local government rental tax'),
+('ROAD', 'Road Maintenance Fee', 'Road and infrastructure maintenance fund'),
+('AIR', 'Airport Surcharge', 'Applicable to airport-based branches'),
+('LUX', 'Luxury Vehicle Tax', 'Applies to high-end vehicle classes'),
+('ELEC', 'Electric Vehicle Discount', 'Tax relief for electric vehicles');
+GO
+
+----------------------------------
+-- CREATE Finance.Tax_Rate Table to store tax rate for different tax types.
+------------------------------------------------
+
+
+CREATE TABLE Finance.Tax_Rate (
+    tax_rate_id INT IDENTITY(1,1) PRIMARY KEY,
+    tax_type_id INT NOT NULL,                   -- FK → Finance.Tax_Type
+    branch_id INT NOT NULL,                     -- FK → Operation.Branch
+    tax_rate DECIMAL(5,2) NULL CHECK (tax_rate >= 0),
+    effective_start_date DATE NOT NULL,
+    effective_end_date DATE NULL,
+
+
+    CONSTRAINT FK_TaxRate_TaxType FOREIGN KEY (tax_type_id)
+        REFERENCES Finance.Tax_Type(tax_type_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+
+    CONSTRAINT FK_TaxRate_Branch FOREIGN KEY (branch_id)
+        REFERENCES Operation.Branch(branch_id)
+        ON DELETE NO ACTION
+        ON UPDATE CASCADE,
+);
+GO
+
+
+--------------------------------------------------------
+-- Stored Procedure: Assign Tax Rates to All Branches
+-- Author: Pawan Oli
+-- Purpose:
+--   Auto-populates Finance.Tax_Rate with standard tax rates
+--   based on tax type and branch name (airport logic included)
+--------------------------------------------------------
+CREATE OR ALTER PROCEDURE Finance.usp_Assign_Taxes_To_Branches
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+
+    INSERT INTO Finance.Tax_Rate (tax_type_id, branch_id, tax_rate, effective_start_date)
+    SELECT
+        tt.tax_type_id,
+        b.branch_id,
+        CASE
+            WHEN tt.tax_code = 'STATE' THEN 7.25
+            WHEN tt.tax_code = 'CITY' THEN 1.25
+            WHEN tt.tax_code = 'ROAD' THEN 0.75
+            WHEN tt.tax_code = 'ENV' THEN 0.50
+            WHEN tt.tax_code = 'AIR' AND b.branch_name LIKE '%Airport%' THEN 5.00
+            ELSE 0.00
+        END AS tax_rate,
+        GETDATE() AS effective_start_date
+    FROM Operation.Branch b
+    CROSS JOIN Finance.Tax_Type tt
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM Finance.Tax_Rate t
+        WHERE t.branch_id = b.branch_id
+          AND t.tax_type_id = tt.tax_type_id
+    );
+END;
+GO
+EXEC Finance.usp_Assign_Taxes_To_Branches;
+
+
+-------------------------------------------------
+-- Create Finance.Promotion Table
+--------------------------------------------------------
+
+CREATE TABLE Finance.Promotion (
+    promotion_id INT IDENTITY(1,1) PRIMARY KEY,
+    promotion_code VARCHAR(20) NOT NULL UNIQUE,
+    promotion_name VARCHAR(50) NOT NULL,
+    promotion_description VARCHAR(150) NULL,
+    promotion_value DECIMAL(10,2) NOT NULL CHECK (promotion_value >= 0),
+    promotion_type VARCHAR(30) NOT NULL 
+        CHECK (promotion_type IN ('Public','Seasonal','Referral','Corporate','Loyalty')),
+    promotion_start_date DATETIME NOT NULL,
+    promotion_end_date DATETIME NOT NULL,
+    is_active BIT NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT CK_Promotion_DateRange CHECK (promotion_end_date > promotion_start_date)
+);
+GO
+
+--------------------------------------
+-- Insert Data to Finance.Promotion Table
+-----------------------------------------
+
+
+INSERT INTO Finance.Promotion
+(promotion_code, promotion_name, promotion_description,
+ promotion_value, promotion_type, promotion_start_date, promotion_end_date, is_active)
+VALUES
+('SPRING10',   'Spring Sale',
+ '10% off all rentals during March and April',
+ 10.00, 'Public', '2025-03-01', '2025-04-30', 1),
+('NEWCUSTOMER50', 'Welcome Offer',
+ '50% off for first-time customers',
+ 50.00, 'Public', '2025-01-01', '2025-06-30', 1),
+('STUDENT15', 'Student Discount',
+ '15% off with valid student ID',
+ 15.00, 'Public', '2025-04-01', '2025-12-31', 1),
+('WEEKEND25', 'Weekend Saver',
+ '25% off weekend rentals (Fri–Sun only)',
+ 25.00, 'Public', '2025-05-01', '2025-09-01', 1),
+('ECO5', 'Eco Drive',
+ '5% off hybrid and electric vehicles',
+ 5.00, 'Public', '2025-03-01', '2025-12-31', 1),
+('SUMMER20', 'Summer Savings',
+ '20% discount for rentals between June and August',
+ 20.00, 'Seasonal', '2025-06-01', '2025-08-31', 1),
+('HOLIDAY30', 'Holiday Special',
+ '30% discount for bookings during holidays',
+ 30.00, 'Seasonal', '2025-12-01', '2026-01-05', 0),
+('FALL10', 'Fall Discount',
+ '10% off all rentals during the fall season',
+ 10.00, 'Seasonal', '2025-09-01', '2025-11-30', 1),
+('REF10', 'Referral Bonus',
+ '10% off when referred by a friend',
+ 10.00, 'Referral', '2025-03-01', '2025-09-30', 1),
+('CORP20', 'Corporate Deal',
+ '20% off for registered corporate partners',
+ 20.00, 'Corporate', '2025-01-01', '2025-12-31', 1);
+ GO
+
+
+ 
+--------------------------------------------------------
+-- Create Finance.Estimate_Charge (Bridge Table)
+--------------------------------------------------------
+CREATE TABLE Finance.Estimate_Charge (
+    charge_rate_id INT NOT NULL,
+    estimate_id INT NOT NULL,
+    charge_quantity DECIMAL(10,2) NOT NULL CHECK (charge_quantity >= 0),
+
+
+    ----------------------------------------------------
+    -- Composite Primary Key (prevents duplicates)
+    ----------------------------------------------------
+    CONSTRAINT PK_Estimate_Charge PRIMARY KEY (charge_rate_id, estimate_id),
+
+
+    ----------------------------------------------------
+    -- Foreign Key to Rental_Charge
+    ----------------------------------------------------
+    CONSTRAINT FK_EstimateCharge_ChargeRate
+        FOREIGN KEY (charge_rate_id)
+        REFERENCES Finance.Charge_Rate(charge_rate_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+
+
+    ----------------------------------------------------
+    -- Foreign Key to Rental_Estimate
+    ----------------------------------------------------
+    CONSTRAINT FK_EstimateCharge_RentalEstimate
+        FOREIGN KEY (estimate_id)
+        REFERENCES Finance.Rental_Estimate(estimate_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+GO
+
+----------------------------------
+-- Create Estimate_Tax table
+------------------------------------
+CREATE TABLE Finance.Estimate_Tax (
+    estimate_id INT NOT NULL,
+    tax_rate_id INT NOT NULL,
+    tax_amount DECIMAL(10,2) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT PK_Estimate_Tax PRIMARY KEY (estimate_id, tax_rate_id),
+    CONSTRAINT FK_Estimate_Tax_Estimate FOREIGN KEY (estimate_id)
+        REFERENCES Finance.Rental_Estimate(estimate_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT FK_Estimate_Tax_TaxRate FOREIGN KEY (tax_rate_id)
+        REFERENCES Finance.Tax_Rate(tax_rate_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+GO
+
+----------------------------------
+-- Create Finance.Estimate_Promotion table
+------------------------------------
+
+CREATE TABLE Finance.Estimate_Promotion (
+    estimate_id INT NOT NULL,
+    promotion_id INT NOT NULL,
+    discount_amount DECIMAL(10,2) NULL, -- Calculated discount for this estimate
+    applied BIT NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT PK_Estimate_Promotion PRIMARY KEY (estimate_id, promotion_id),
+    CONSTRAINT FK_Estimate_Promotion_Estimate FOREIGN KEY (estimate_id)
+        REFERENCES Finance.Rental_Estimate(estimate_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT FK_Estimate_Promotion_Promotion FOREIGN KEY (promotion_id)
+        REFERENCES Finance.Promotion(promotion_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+GO
+
+
+-----------------------------
+-- Stored Procedure to calculate and insert the rental estimate 
+
+CREATE OR ALTER PROCEDURE Finance.usp_CreateRentalEstimate
+    @reservation_id INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @estimate_id INT;
+    DECLARE @vehicle_id INT,
+            @vehicle_class_id INT,
+            @pickup_branch_id INT,
+            @dropoff_branch_id INT,
+            @pickup_datetime DATETIME,
+            @return_datetime DATETIME,
+            @vehicle_rate_id INT,
+            @base_rate DECIMAL(10, 2),
+            @total_days INT;
+
+    -- 1. Gather reservation parameters
+    SELECT
+        @vehicle_id = vehicle_id,
+        @pickup_branch_id = pickup_branch_id,
+        @dropoff_branch_id = dropoff_branch_id,
+        @pickup_datetime = pickup_datetime,
+        @return_datetime = return_datetime
+    FROM Rental.Reservation
+    WHERE reservation_id = @reservation_id;
+
+    SET @total_days = DATEDIFF(DAY, @pickup_datetime, @return_datetime) + 1;
+
+    -- 2. Lookup vehicle_class_id from Vehicle.vehicle
+    SELECT @vehicle_class_id = vehicle_class_id
+    FROM Vehicle.Vehicle
+    WHERE vehicle_id = @vehicle_id;
+
+    -- 3. Find rate for that vehicle_class_id
+    SELECT TOP 1
+        @vehicle_rate_id = vehicle_rate_id,
+        @base_rate = vehicle_daily_rate * @total_days
+    FROM Finance.Vehicle_Rate
+    WHERE vehicle_class_id = @vehicle_class_id
+    ORDER BY vehicle_rate_id DESC;  -- or use a valid date/versioning if you have it
+
+    -- 4. Insert Rental_Estimate (parent, zero totals for now)
+    INSERT INTO Finance.Rental_Estimate
+    (reservation_id, vehicle_rate_id, base_rate, surcharge_total, discount_total, tax_total)
+    VALUES
+    (@reservation_id, @vehicle_rate_id, @base_rate, 0, 0, 0);
+
+    SET @estimate_id = SCOPE_IDENTITY();
+
+    -- 5. Insert Estimate_Charge rows
+       INSERT INTO Finance.Estimate_Charge (charge_rate_id, estimate_id, charge_quantity)
+    SELECT
+        rrc.charge_rate_id,
+        @estimate_id,
+        rrc.quantity
+    FROM Rental.Reservation_Charge rrc
+    WHERE rrc.reservation_id = @reservation_id;
+
+    -- 6. Insert Estimate_Tax rows (use pickup branch)
+    INSERT INTO Finance.Estimate_Tax (estimate_id, tax_rate_id, tax_amount, created_at)
+    SELECT
+        @estimate_id,
+        tr.tax_rate_id,
+        ROUND((@base_rate * tr.tax_rate / 100), 2),
+        GETDATE()
+    FROM Finance.Tax_Rate tr
+    WHERE tr.branch_id = @pickup_branch_id
+      AND tr.effective_start_date <= @pickup_datetime
+      AND (tr.effective_end_date IS NULL OR tr.effective_end_date >= @return_datetime);
+
+    -- 7. Insert Estimate_Promotion rows (all active for pickup date)
+    INSERT INTO Finance.Estimate_Promotion (estimate_id, promotion_id, discount_amount, applied, created_at)
+    SELECT
+        @estimate_id,
+        p.promotion_id,
+        ROUND((@base_rate * p.promotion_value / 100), 2),
+        1,
+        GETDATE()
+    FROM Finance.Promotion p
+    WHERE p.is_active = 1
+      AND @pickup_datetime BETWEEN p.promotion_start_date AND p.promotion_end_date;
+
+    -- 8. Update totals in Rental_Estimate
+    UPDATE Finance.Rental_Estimate
+    SET
+      surcharge_total = (
+          SELECT COALESCE(SUM(cr.charge_unit_rate * ec.charge_quantity), 0)
+          FROM Finance.Estimate_Charge ec
+          JOIN Finance.Charge_Rate cr ON ec.charge_rate_id = cr.charge_rate_id
+          WHERE ec.estimate_id = @estimate_id
+      ),
+      discount_total = (
+          SELECT COALESCE(SUM(ep.discount_amount), 0)
+          FROM Finance.Estimate_Promotion ep
+          WHERE ep.estimate_id = @estimate_id
+      ),
+      tax_total = (
+          SELECT COALESCE(SUM(et.tax_amount), 0)
+          FROM Finance.Estimate_Tax et
+          WHERE et.estimate_id = @estimate_id
+      )
+    WHERE estimate_id = @estimate_id;
+
+END;
+GO
+
+---------------
+-- Creating After Trigger to automatically insert the estimate records after reservation has been created. 
+-----------------------------
+
+CREATE OR ALTER TRIGGER Rental.tr_AfterInsert_RentalReservation
+ON Rental.Reservation
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @reservation_id INT;
+
+    -- Cursor to handle multi-row inserts:
+    DECLARE cur CURSOR LOCAL FOR
+        SELECT reservation_id FROM inserted;
+
+    OPEN cur;
+    FETCH NEXT FROM cur INTO @reservation_id;
+
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        EXEC Finance.usp_CreateRentalEstimate @reservation_id;
+        FETCH NEXT FROM cur INTO @reservation_id;
+    END
+
+    CLOSE cur;
+    DEALLOCATE cur;
+END;
+GO
+
+-- Trigger for reservation_charge: 
+
+CREATE OR ALTER TRIGGER trg_AfterInsert_ReservationCharge
+ON Rental.Reservation_Charge
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- For every reservation that got a new add-on (handles bulk/row inserts)
+    DECLARE @reservation_id INT;
+
+    -- Use a cursor for multiple inserted rows (if batch-inserted)
+    DECLARE inserted_cursor CURSOR FOR
+        SELECT DISTINCT reservation_id FROM inserted;
+
+    OPEN inserted_cursor;
+    FETCH NEXT FROM inserted_cursor INTO @reservation_id;
+
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        -- Call your stored procedure for each reservation
+        EXEC Finance.usp_CreateRentalEstimate @reservation_id = @reservation_id;
+
+        FETCH NEXT FROM inserted_cursor INTO @reservation_id;
+    END
+
+    CLOSE inserted_cursor;
+    DEALLOCATE inserted_cursor;
+END;
+GO
+
+---------------------------
+-- Insert 30 records into Rental.Reservation 
+---------------------------------
+
+-- Allow explicit reservation_id inserts
+SET IDENTITY_INSERT Rental.Reservation ON; -- turn remove the comment with this line if get error.
+
+INSERT INTO Rental.Reservation (
+    reservation_id, customer_id, vehicle_id, pickup_branch_id, dropoff_branch_id,
+    reservation_date, pickup_datetime, return_datetime, rental_duration_type, reservation_status, confirmation_number
+)
+VALUES
+(1,  1, 1, 1,  1,  GETDATE(), '2025-12-09 14:45:00', '2025-12-16 14:45:00', 'Weekly', 'Confirmed', 'CNF00001'),
+(2,  2, 2, 2,  2,  GETDATE(), '2025-12-10 09:00:00', '2025-12-12 09:00:00', 'Daily',  'Completed', 'CNF00002'),
+(3,  3, 3, 3,  3,  GETDATE(), '2025-12-11 11:00:00', '2025-12-18 11:00:00', 'Weekly', 'Confirmed', 'CNF00003'),
+(4,  4, 4, 4,  4,  GETDATE(), '2025-12-12 08:00:00', '2025-12-14 08:00:00', 'Daily',  'Pending',   'CNF00004'),
+(5,  5, 5, 5,  5,  GETDATE(), '2025-12-13 10:30:00', '2025-12-20 10:30:00', 'Weekly', 'Confirmed', 'CNF00005'),
+(6,  6, 6, 6,  6,  GETDATE(), '2025-12-14 13:00:00', '2025-12-15 13:00:00', 'Daily',  'Cancelled', 'CNF00006'),
+(7,  7, 7, 7,  7,  GETDATE(), '2025-12-15 12:00:00', '2025-12-29 12:00:00', 'Weekly', 'Confirmed', 'CNF00007'),
+(8,  8, 8, 8,  8,  GETDATE(), '2025-12-16 09:00:00', '2025-12-18 09:00:00', 'Daily',  'Completed', 'CNF00008'),
+(9,  9, 9, 9,  9,  GETDATE(), '2025-12-17 10:00:00', '2025-12-24 10:00:00', 'Weekly', 'Confirmed', 'CNF00009'),
+(10, 10, 10, 10, 10, GETDATE(), '2025-12-18 08:30:00', '2025-12-19 08:30:00', 'Daily',  'Pending',   'CNF00010'),
+(11, 11, 11, 11, 11, GETDATE(), '2025-12-19 15:00:00', '2025-12-26 15:00:00', 'Weekly', 'Confirmed', 'CNF00011'),
+(12, 12, 12, 12, 12, GETDATE(), '2025-12-20 10:00:00', '2025-12-21 10:00:00', 'Daily',  'Completed', 'CNF00012'),
+(13, 13, 13, 13, 13, GETDATE(), '2025-12-21 11:00:00', '2025-12-28 11:00:00', 'Weekly', 'Confirmed', 'CNF00013'),
+(14, 14, 14, 14, 14, GETDATE(), '2025-12-22 09:00:00', '2025-12-29 09:00:00', 'Weekly', 'Confirmed', 'CNF00014'),
+(15, 15, 15, 15, 15, GETDATE(), '2025-12-23 08:30:00', '2025-12-24 08:30:00', 'Daily',  'Cancelled', 'CNF00015'),
+(16, 16, 16, 16, 16, GETDATE(), '2025-12-24 10:00:00', '2025-12-26 10:00:00', 'Daily',  'Confirmed', 'CNF00016'),
+(17, 17, 17, 17, 17, GETDATE(), '2025-12-25 12:30:00', '2026-01-01 12:30:00', 'Weekly', 'Completed', 'CNF00017'),
+(18, 18, 18, 18, 18, GETDATE(), '2025-12-26 14:00:00', '2025-12-27 14:00:00', 'Daily',  'Pending',   'CNF00018'),
+(19, 19, 19, 19, 19, GETDATE(), '2025-12-27 09:00:00', '2026-01-03 09:00:00', 'Weekly', 'Confirmed', 'CNF00019'),
+(20, 20, 20, 20, 20, GETDATE(), '2025-12-28 08:00:00', '2026-01-11 08:00:00', 'Weekly', 'Confirmed', 'CNF00020'),
+(21, 21, 21, 21, 21, GETDATE(), '2025-12-29 13:00:00', '2026-01-05 13:00:00', 'Weekly', 'Completed', 'CNF00021'),
+(22, 22, 22, 22, 22, GETDATE(), '2025-12-30 15:00:00', '2026-01-06 15:00:00', 'Weekly', 'Confirmed', 'CNF00022'),
+(23, 23, 23, 23, 23, GETDATE(), '2025-12-31 10:00:00', '2026-01-02 10:00:00', 'Daily',  'Confirmed', 'CNF00023'),
+(24, 24, 24, 24, 24, GETDATE(), '2026-01-01 09:00:00', '2026-01-08 09:00:00', 'Weekly', 'Completed', 'CNF00024'),
+(25, 25, 25, 25, 6,  GETDATE(), '2026-01-02 12:00:00', '2026-01-09 12:00:00', 'Weekly', 'Confirmed', 'CNF00025'),
+(26, 26, 26, 26, 11, GETDATE(), '2026-01-03 11:30:00', '2026-01-04 11:30:00', 'Daily',  'Cancelled', 'CNF00026'),
+(27, 27, 27, 27, 15, GETDATE(), '2026-01-04 13:00:00', '2026-01-18 13:00:00', 'Weekly', 'Confirmed', 'CNF00027'),
+(28, 28, 28, 28, 13, GETDATE(), '2026-01-05 08:00:00', '2026-01-19 08:00:00', 'Weekly', 'Completed', 'CNF00028'),
+(29, 29, 29, 29, 10, GETDATE(), '2026-01-06 10:30:00', '2026-01-13 10:30:00', 'Weekly', 'Confirmed', 'CNF00029'),
+(30, 30, 30, 30, 17, GETDATE(), '2026-01-07 09:00:00', '2026-01-14 09:00:00', 'Weekly', 'Pending',   'CNF00030');
+GO
+
+INSERT INTO Rental.Reservation_Charge (reservation_id, charge_rate_id, quantity)
+VALUES
+-- === Basic Rentals (1–10) ===
+(1,  1, 1),   -- GPS
+(1,  2, 7),   -- Insurance (7 days)
+(2,  1, 1),
+(2,  2, 2),
+(3,  1, 1),
+(3,  3, 7),
+(4,  2, 2),
+(4,  8, 1),   -- Cleaning Fee
+(5,  1, 1),
+(5,  2, 7),
+(6,  1, 1),
+(6,  5, 1),   -- Fuel Refill Fee
+(7,  2, 5),
+(8,  3, 2),
+(9,  2, 7),
+(10, 1, 1),
+(10, 7, 1),   -- Roadside Assistance
+
+-- === Family Rentals (11–20) ===
+(11, 1, 1),
+(11, 2, 7),
+(11, 4, 1),   -- Child Seat
+(12, 1, 1),
+(12, 8, 1),
+(13, 1, 1),
+(13, 2, 7),
+(13, 4, 1),
+(13, 8, 1),
+(14, 2, 3),
+(14, 7, 1),
+(15, 1, 1),
+(15, 2, 2),
+(15, 5, 1),
+(16, 2, 3),
+(16, 8, 1),
+(17, 2, 7),
+(17, 6, 7),   -- Luxury Vehicle Surcharge
+(18, 3, 1),
+(18, 2, 2),
+(19, 2, 7),
+(19, 4, 1),
+(19, 8, 1),
+(20, 2, 3),
+(20, 7, 1),
+
+-- === Premium Rentals (21–24) ===
+(21, 2, 7),
+(21, 6, 7),
+(21, 7, 1),
+(22, 2, 7),
+(22, 3, 7),
+(22, 8, 1),
+(23, 1, 1),
+(23, 2, 3),
+(23, 4, 1),
+(23, 7, 1),
+(24, 2, 7),
+(24, 6, 7),
+(24, 8, 1),
+
+-- === One-Way Rentals (25–30) ===
+(25, 1, 1),
+(25, 2, 7),
+(25, 12, 1),  -- One-Way Fee
+(26, 2, 2),
+(26, 12, 1),
+(27, 1, 1),
+(27, 2, 14),
+(27, 12, 1),
+(28, 6, 14),
+(28, 12, 1),
+(29, 2, 7),
+(29, 12, 1),
+(30, 2, 7),
+(30, 12, 1);
+GO
+
+--------------------------------------------------------
+-- Rental.Rental
+-- Stores actual rental session details (after pickup)
+--------------------------------------------------------
 CREATE TABLE Rental.Rental (
     rental_id INT IDENTITY(1,1) PRIMARY KEY,
-    reservation_id INT NOT NULL,                -- FK to Rental.Reservation
-    customer_id INT NOT NULL,                   -- FK to Customer.Customer
-    vehicle_vin VARCHAR(17) NOT NULL,           -- FK to Vehicle.Vehicle
+    reservation_id INT NOT NULL,
+    customer_id INT NOT NULL,
+    vehicle_id INT NOT NULL,
     rental_start DATETIME NOT NULL,
-    rental_end DATETIME NOT NULL,
-    total_mileage_used DECIMAL(10,2) NULL,
-    rental_status VARCHAR(30) NOT NULL CHECK (rental_status IN ('Ongoing', 'Completed', 'Cancelled', 'Overdue')),
-    rental_total DECIMAL(10,2) NOT NULL,
-    security_deposit DECIMAL(10,2) NULL,
-    rental_notes VARCHAR(300) NULL,
-    rental_acknowledgement_signed BIT NOT NULL DEFAULT 0,
+    rental_end DATETIME NULL,
+    security_deposit DECIMAL(10,2) NOT NULL DEFAULT 300.00,
+    rental_total DECIMAL(10,2) NULL, -- Final cost
+    rental_status VARCHAR(20) NOT NULL CHECK (rental_status IN ('Active','Completed','Cancelled')),
     created_at DATETIME NOT NULL DEFAULT GETDATE(),
+    updated_at DATETIME NULL,
 
-    
-    CONSTRAINT FK_Rental_Customer FOREIGN KEY (customer_id)  
+    --------------------------------------------------------
+    -- Foreign Keys
+    --------------------------------------------------------
+    CONSTRAINT FK_Rental_Reservation
+        FOREIGN KEY (reservation_id)
+        REFERENCES Rental.Reservation(reservation_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+
+    CONSTRAINT FK_Rental_Customer
+        FOREIGN KEY (customer_id)
         REFERENCES Customer.Customer(customer_id)
         ON DELETE NO ACTION ON UPDATE CASCADE,
 
-    CONSTRAINT FK_Rental_Vehicle FOREIGN KEY (vehicle_vin) 
-        REFERENCES Vehicle.Vehicle(vehicle_vin)
-        ON DELETE NO ACTION ON UPDATE CASCADE,
-
-    CONSTRAINT FK_Rental_Reservation FOREIGN KEY (reservation_id) 
-        REFERENCES Rental.Reservation(reservation_id)
-        ON DELETE NO ACTION ON UPDATE CASCADE,
-
-    -- Ensrues 1:1 relationship with Reservation
-    CONSTRAINT UQ_Rental_Reservation UNIQUE (reservation_id)
+    CONSTRAINT FK_Rental_Vehicle
+        FOREIGN KEY (vehicle_id)
+        REFERENCES Vehicle.Vehicle(vehicle_id)
+        ON DELETE NO ACTION ON UPDATE CASCADE
 );
 GO
 
 --------------------------------------------------------
--- Insert Sample Data into Rental.Rental
+-- Finance.Rental_Charge_Detail
+-- Bridge between Rental.Rental and Finance.Charge_Rate
+-- Tracks all actual rental-time charges (late fee, damage, etc.)
+--------------------------------------------------------
+CREATE TABLE Finance.Rental_Charge_Detail (
+    rental_id INT NOT NULL,
+    charge_rate_id INT NOT NULL,
+    charge_quantity DECIMAL(10,2) NOT NULL CHECK (charge_quantity >= 0),
+    created_at DATETIME NOT NULL DEFAULT GETDATE(),
+
+    ----------------------------------------------------
+    -- Composite Primary Key (prevents duplicate rows)
+    ----------------------------------------------------
+    CONSTRAINT PK_Rental_Charge_Detail PRIMARY KEY (rental_id, charge_rate_id),
+
+    ----------------------------------------------------
+    -- Foreign Key to Rental.Rental
+    ----------------------------------------------------
+    CONSTRAINT FK_RentalChargeDetail_Rental
+        FOREIGN KEY (rental_id)
+        REFERENCES Rental.Rental(rental_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+
+    ----------------------------------------------------
+    -- Foreign Key to Finance.Charge_Rate
+    ----------------------------------------------------
+    CONSTRAINT FK_RentalChargeDetail_ChargeRate
+        FOREIGN KEY (charge_rate_id)
+        REFERENCES Finance.Charge_Rate(charge_rate_id)
+        ON DELETE NO ACTION ON UPDATE CASCADE
+);
+GO
+
+--------------------------------------------------------
+-- Insert Rentals from Completed Reservations
 --------------------------------------------------------
 INSERT INTO Rental.Rental
-(reservation_id, customer_id, vehicle_vin, rental_start, rental_end,
- total_mileage_used, rental_status, rental_total, security_deposit, rental_notes, rental_acknowledgement_signed)
-VALUES
-(1, 1, '1HGCM82633A004352', '2025-03-02 09:00', '2025-03-05 10:00', 320.5, 'Completed', 245.50, 150.00, 'Returned in good condition.', 1),
-(2, 2, '2T1BURHE5KC012457', '2025-03-07 08:30', '2025-03-10 09:00', 280.3, 'Completed', 265.00, 200.00, 'No damages.', 1),
-(3, 3, '1FADP3F25HL220956', '2025-03-12 07:45', '2025-03-15 09:15', 310.0, 'Completed', 275.40, 150.00, NULL, 1),
-(4, 4, '1FTFW1E52JKC20230', '2025-03-20 10:00', '2025-03-25 11:00', 420.7, 'Completed', 360.00, 200.00, 'Full-size truck used for business.', 1),
-(5, 5, '1C4PJMDX8LD507962', '2025-03-26 12:00', '2025-03-30 10:30', NULL, 'Cancelled', 0.00, NULL, 'Cancelled before pickup.', 0),
-(6, 6, '5NPE24AF4KH887345', '2025-04-01 09:00', '2025-04-05 09:00', 215.8, 'Completed', 198.75, 150.00, 'Returned 1 day early.', 1),
-(7, 7, '3VW2B7AJ5EM384910', '2025-04-08 08:15', '2025-04-10 08:45', 190.0, 'Completed', 175.25, 100.00, NULL, 1),
-(8, 8, '1HGCV1F32MA003842', '2025-04-12 10:00', '2025-04-14 09:00', 205.6, 'Completed', 186.50, 100.00, 'Hybrid model, smooth drive.', 1),
-(9, 9, '1N4AL3AP9JC149782', '2025-04-15 09:00', '2025-04-18 09:00', 300.2, 'Completed', 220.00, 150.00, NULL, 1),
-(10, 10, '2HGFC2F52KH568931', '2025-04-20 11:00', '2025-04-23 09:00', 250.3, 'Ongoing', 198.00, 150.00, 'Customer extended rental by one day.', 1),
-(11, 11, '1FAFP404X2F224319', '2025-04-25 09:00', '2025-04-29 09:00', 312.9, 'Completed', 260.50, 150.00, 'Returned on time.', 1),
-(12, 12, '1FTCR10A5RUB47283', '2025-04-30 10:00', '2025-05-03 11:00', NULL, 'Cancelled', 0.00, NULL, 'Customer cancelled due to weather.', 0),
-(13, 13, '5UXWX9C55H0T41597', '2025-05-04 09:00', '2025-05-08 09:00', 415.5, 'Completed', 370.00, 200.00, NULL, 1),
-(14, 14, 'WBA3A5C56CF207894', '2025-05-10 08:30', '2025-05-13 09:00', 260.4, 'Completed', 295.50, 250.00, 'Luxury class rental.', 1),
-(15, 15, '1N6AA1F41GN520843', '2025-05-14 09:00', '2025-05-16 08:45', 198.3, 'Completed', 185.00, 150.00, 'Pickup truck for delivery.', 1),
-(16, 16, '3FA6P0H76HR377420', '2025-05-18 10:00', '2025-05-21 09:00', 284.7, 'Completed', 250.00, 200.00, NULL, 1),
-(17, 17, '4T1BE46K19U387462', '2025-05-23 09:30', '2025-05-26 10:00', 310.2, 'Overdue', 310.00, 200.00, 'Customer overdue by 1 day.', 0),
-(18, 18, '1G1ZD5ST7LF031290', '2025-05-28 09:00', '2025-05-31 10:00', 330.0, 'Completed', 295.20, 150.00, 'Returned clean.', 1),
-(19, 19, '3GNAXHEV8LS694531', '2025-06-02 09:00', '2025-06-05 08:30', 210.4, 'Completed', 280.00, 150.00, NULL, 1),
-(20, 20, '1FT7W2BT7KEC03495', '2025-06-08 08:00', '2025-06-12 09:00', NULL, 'Cancelled', 0.00, NULL, 'Cancelled by branch due to maintenance.', 0),
-(21, 21, '1C4HJXDG1LW268953', '2025-06-14 10:00', '2025-06-18 10:00', 365.7, 'Completed', 320.50, 150.00, 'Off-road Jeep rental.', 1),
-(22, 22, '5FNRL6H73NB098342', '2025-06-20 09:00', '2025-06-23 09:00', 280.8, 'Completed', 260.25, 150.00, 'Family trip.', 1),
-(23, 23, '1FTYR10C8XTA01823', '2025-06-25 09:30', '2025-06-27 09:00', 190.2, 'Completed', 210.00, 150.00, NULL, 1),
-(24, 24, '5YJSA1CN5DFP23451', '2025-06-29 10:00', '2025-07-02 10:00', 150.6, 'Completed', 400.00, 250.00, 'Tesla rental, charged fully.', 1),
-(25, 25, '5YJ3E1EA7KF275613', '2025-07-03 09:00', '2025-07-05 09:30', 180.3, 'Ongoing', 345.50, 250.00, 'Extended booking.', 1);
+(reservation_id, customer_id, vehicle_id, rental_start, rental_end, security_deposit, rental_status)
+SELECT
+    r.reservation_id,
+    r.customer_id,
+    r.vehicle_id,
+    r.pickup_datetime,
+    r.return_datetime,
+    300.00 AS security_deposit,
+    'Active' AS rental_status
+FROM Rental.Reservation r
+WHERE r.reservation_status = 'Completed';
 GO
+
+
+------------------------------------------------------------
+-- Stored Procedure: usp_FinalizeRental
+-- Author: Pawan Oli
+-- Purpose: Calculates and updates final rental total
+-- Logic: estimate + extra charges + deposit
+------------------------------------------------------------
+CREATE OR ALTER PROCEDURE Rental.usp_FinalizeRental
+    @rental_id INT,
+    @rental_end DATETIME
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    --------------------------------------------------------
+    -- Declare variables
+    --------------------------------------------------------
+    DECLARE 
+        @reservation_id INT,
+        @base_estimate DECIMAL(10,2),
+        @extra_charges DECIMAL(10,2),
+        @security_deposit DECIMAL(10,2) = 300.00,
+        @final_total DECIMAL(10,2);
+
+    --------------------------------------------------------
+    -- 1️⃣ Get reservation_id for this rental
+    --------------------------------------------------------
+    SELECT @reservation_id = reservation_id
+    FROM Rental.Rental
+    WHERE rental_id = @rental_id;
+
+    --------------------------------------------------------
+    -- 2️⃣ Get total_estimate from Finance.Rental_Estimate
+    --------------------------------------------------------
+    SELECT @base_estimate = ISNULL(total_estimate, 0)
+    FROM Finance.Rental_Estimate
+    WHERE reservation_id = @reservation_id;
+
+    --------------------------------------------------------
+    -- 3️⃣ Sum all actual charges for this rental
+    --------------------------------------------------------
+    SELECT 
+        @extra_charges = ISNULL(SUM(cr.charge_unit_rate * d.charge_quantity), 0)
+    FROM Finance.Rental_Charge_Detail d
+    JOIN Finance.Charge_Rate cr 
+        ON d.charge_rate_id = cr.charge_rate_id
+    WHERE d.rental_id = @rental_id;
+
+    --------------------------------------------------------
+    -- 4️⃣ Calculate final total
+    --------------------------------------------------------
+    SET @final_total = ROUND(@base_estimate + @extra_charges + @security_deposit, 2);
+
+    --------------------------------------------------------
+    -- 5️⃣ Update Rental table with final total and status
+    --------------------------------------------------------
+    UPDATE Rental.Rental
+    SET 
+        rental_end = @rental_end,
+        rental_total = @final_total,
+        rental_status = 'Completed',
+        updated_at = GETDATE()
+    WHERE rental_id = @rental_id;
+
+    --------------------------------------------------------
+    -- 6️⃣ Return summary for verification
+    --------------------------------------------------------
+    SELECT 
+        @rental_id AS rental_id,
+        @reservation_id AS reservation_id,
+        @base_estimate AS estimated_cost,
+        @extra_charges AS extra_charges,
+        @security_deposit AS deposit,
+        @final_total AS final_total,
+        'Completed' AS new_status;
+END;
+GO
+
+------------------------------------------------------------
+-- Trigger: trg_FinalizeRental_AfterStatusChange
+-- Purpose: Automatically run usp_FinalizeRental 
+--          when rental_status changes to 'Completed'
+-- Author: Pawan Oli
+------------------------------------------------------------
+CREATE OR ALTER TRIGGER Rental.trg_FinalizeRental_AfterStatusChange
+ON Rental.Rental
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    --------------------------------------------------------
+    -- Only run if status is set to 'Completed'
+    --------------------------------------------------------
+    IF NOT EXISTS (
+        SELECT 1
+        FROM inserted i
+        WHERE i.rental_status = 'Completed'
+    )
+        RETURN;
+
+    --------------------------------------------------------
+    -- Loop through all rows that were updated to Completed
+    --------------------------------------------------------
+    DECLARE @rental_id INT, @rental_end DATETIME;
+
+    DECLARE cur CURSOR FOR
+    SELECT i.rental_id, i.rental_end
+    FROM inserted i
+    JOIN deleted d ON i.rental_id = d.rental_id
+    WHERE i.rental_status = 'Completed'
+      AND d.rental_status <> 'Completed';
+
+    OPEN cur;
+    FETCH NEXT FROM cur INTO @rental_id, @rental_end;
+
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        EXEC Rental.usp_FinalizeRental 
+            @rental_id = @rental_id, 
+            @rental_end = @rental_end;
+
+        FETCH NEXT FROM cur INTO @rental_id, @rental_end;
+    END
+
+    CLOSE cur;
+    DEALLOCATE cur;
+END;
+GO
+
+
+-- Update the rental_status after it is completed;
+
+UPDATE Rental.Rental
+SET rental_status = 'Completed', rental_end = '2026-01-01 12:30'
+WHERE rental_id = 4;
+
+
+------------------------------------------------------------
+-- Complete all active rentals (trigger auto-finalizes totals)
+------------------------------------------------------------
+UPDATE Rental.Rental
+SET 
+    rental_status = 'Completed',
+    updated_at = GETDATE()
+WHERE rental_status = 'Active';
+GO
+
+------------------------------------------------------------
+-- Example: Add rental-time charges for damaged/lated rentals
+------------------------------------------------------------
+INSERT INTO Finance.Rental_Charge_Detail (rental_id, charge_rate_id, charge_quantity)
+VALUES
+(4, 9, 2),  -- Late return (2 hours)
+(4, 10, 1), -- Cleaning fee
+(6, 7, 1);  -- Damage fee
+GO
+
+------------------------------------------------------------
+-- Show total extra charges per rental
+------------------------------------------------------------
+SELECT 
+    r.rental_id,
+    r.reservation_id,
+    ISNULL(SUM(cr.charge_unit_rate * d.charge_quantity), 0) AS extra_charges
+FROM Rental.Rental r
+LEFT JOIN Finance.Rental_Charge_Detail d ON r.rental_id = d.rental_id
+LEFT JOIN Finance.Charge_Rate cr ON d.charge_rate_id = cr.charge_rate_id
+GROUP BY r.rental_id, r.reservation_id
+ORDER BY r.rental_id;
+GO
+
 
 --------------------------------------------------------
 -- Create Customer_Payment_Method Table
@@ -614,8 +1447,13 @@ VALUES
 (22, 'Debit', 'MasterCard', 'tok_u2x3y4z5a6b', '2784', 'Isabella', 'Nelson', 12, 2028),
 (23, 'Credit', 'Visa', 'tok_v3y4z5a6b7c', '1460', 'Ethan', 'Perez', 1, 2029),
 (24, 'Credit', 'Amex', 'tok_w4z5a6b7c8d', '9033', 'Ava', 'Bennett', 6, 2027),
-(25, 'Debit', 'Visa', 'tok_x5a6b7c8d9e', '6722', 'Noah', 'Rivera', 8, 2029);
-GO
+(25, 'Debit', 'Visa', 'tok_x5a6b7c8d9e', '6722', 'Noah', 'Rivera', 8, 2029),
+(25, 'Debit', 'Visa', 'tok_x5a6b7c8d9e', '6722', 'Noah', 'Rivera', 8, 2029),
+(26, 'Credit', 'Visa', 'tok_y6b8d9e0f1g', '1234', 'Harper', 'Morgan', 9, 2028),
+(27, 'Debit', 'MasterCard', 'tok_z7c9e0f1g2h', '5678', 'Zoe', 'Long', 3, 2027),
+(28, 'Credit', 'Amex', 'tok_a8d0f1g2h3i', '9012', 'Carter', 'Russell', 5, 2029),
+(29, 'Credit', 'Discover', 'tok_b9e1g2h3i4j', '3456', 'Penelope', 'Parker', 7, 2028),
+(30, 'Debit', 'Visa', 'tok_c0f2h3i4j5k', '7890', 'Mateo', 'Simmons', 2, 2026);
 
 --------------------------------------------------------
 -- Create a Rental_Payment table under Finance Schema
@@ -638,37 +1476,53 @@ CREATE TABLE Finance.Rental_Payment (
 );
 GO
 
---------------------------------------------------------
--- Insert Sample Data into Finance.Rental_Payment
---------------------------------------------------------
-INSERT INTO Finance.Rental_Payment
-(payment_method_id, rental_id, payment_date, payment_amount, payment_status, reference_number)
-VALUES
-(1, 1, '2025-03-05 10:15', 245.50, 'Completed', 'PAY-20250305-001'),
-(2, 2, '2025-03-10 09:40', 265.00, 'Completed', 'PAY-20250310-002'),
-(3, 3, '2025-03-15 10:25', 275.40, 'Completed', 'PAY-20250315-003'),
-(4, 4, '2025-03-25 11:30', 360.00, 'Completed', 'PAY-20250325-004'),
-(5, 5, '2025-03-26 08:00', 0.00, 'Refunded', 'PAY-20250326-005'),
-(6, 6, '2025-04-05 09:20', 198.75, 'Completed', 'PAY-20250405-006'),
-(7, 7, '2025-04-10 08:30', 175.25, 'Completed', 'PAY-20250410-007'),
-(8, 8, '2025-04-14 09:15', 186.50, 'Completed', 'PAY-20250414-008'),
-(9, 9, '2025-04-18 10:00', 220.00, 'Completed', 'PAY-20250418-009'),
-(10, 10, '2025-04-23 09:30', 198.00, 'Pending', 'PAY-20250423-010'),
-(11, 11, '2025-04-29 10:00', 260.50, 'Completed', 'PAY-20250429-011'),
-(12, 12, '2025-05-03 09:40', 0.00, 'Refunded', 'PAY-20250503-012'),
-(13, 13, '2025-05-08 08:55', 370.00, 'Completed', 'PAY-20250508-013'),
-(14, 14, '2025-05-13 09:30', 295.50, 'Completed', 'PAY-20250513-014'),
-(15, 15, '2025-05-16 08:15', 185.00, 'Completed', 'PAY-20250516-015'),
-(16, 16, '2025-05-21 09:45', 250.00, 'Completed', 'PAY-20250521-016'),
-(17, 17, '2025-05-26 10:10', 0.00, 'Failed', 'PAY-20250526-017'),
-(18, 18, '2025-05-31 09:20', 295.20, 'Completed', 'PAY-20250531-018'),
-(19, 19, '2025-06-05 08:35', 280.00, 'Completed', 'PAY-20250605-019'),
-(20, 20, '2025-06-08 08:10', 0.00, 'Refunded', 'PAY-20250608-020'),
-(21, 21, '2025-06-18 09:10', 320.50, 'Completed', 'PAY-20250618-021'),
-(22, 22, '2025-06-23 09:20', 260.25, 'Completed', 'PAY-20250623-022'),
-(23, 23, '2025-06-27 09:50', 210.00, 'Completed', 'PAY-20250627-023'),
-(24, 24, '2025-07-02 10:05', 400.00, 'Completed', 'PAY-20250702-024'),
-(25, 25, '2025-07-05 09:35', 345.50, 'Pending', 'PAY-20250705-025');
+------------------------------------------------------------
+-- Trigger: Auto-create payment (Credit/Debit) when rental completed
+-- Author: Pawan Oli
+-- Date: 2025-11-12
+------------------------------------------------------------
+CREATE OR ALTER TRIGGER Rental.trg_AutoInsert_Payment
+ON Rental.Rental
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO Finance.Rental_Payment (
+        payment_method_id,
+        rental_id,
+        payment_date,
+        payment_amount,
+        payment_status,
+        reference_number
+    )
+    SELECT 
+        pm.payment_method_id,
+        i.rental_id,
+        GETDATE() AS payment_date,
+        i.rental_total AS payment_amount,
+        'Completed' AS payment_status,
+        CONCAT('PMT', RIGHT('00000' + CAST(i.rental_id AS VARCHAR(5)), 5)) AS reference_number
+    FROM inserted AS i
+    INNER JOIN Customer.Customer_Payment_Method AS pm
+        ON pm.customer_id = i.customer_id
+    WHERE i.rental_status = 'Completed'
+      AND pm.payment_type IN ('Credit', 'Debit')
+      AND i.rental_total IS NOT NULL AND i.rental_total > 0
+      AND NOT EXISTS (
+          SELECT 1 FROM Finance.Rental_Payment AS p 
+          WHERE p.rental_id = i.rental_id
+      );
+END;
+GO
+
+
+---- 
+-- Reactivate the trigger by re-updating completed rentals
+--
+UPDATE Rental.Rental
+SET rental_status = 'Completed'
+WHERE rental_status = 'Completed';
 GO
 
 --------------------------------------------------------
@@ -689,568 +1543,199 @@ CREATE TABLE Finance.Refund (
 );
 GO
 
---------------------------------------------------------
--- Insert Sample Data into Finance.Refund
---------------------------------------------------------
-INSERT INTO Finance.Refund
-(payment_id, refund_date, refund_amount, refund_reason, refund_status)
+------------------------------------------------------------
+-- Insert Refund Records for Existing Payments
+------------------------------------------------------------
+INSERT INTO Finance.Refund (
+    payment_id, refund_date, refund_amount, refund_reason, refund_status
+)
 VALUES
-(5, '2025-03-27 10:15', 150.00, 'Reservation cancelled before pickup', 'Processed'),
-(12, '2025-05-04 09:00', 198.75, 'Weather-related cancellation', 'Processed'),
-(17, '2025-05-27 11:00', 250.00, 'Payment failure refund', 'Processed'),
-(20, '2025-06-09 08:30', 300.00, 'Vehicle unavailable for rental', 'Processed'),
-(10, '2025-04-24 10:00', 198.00, 'Pending payment manually reversed', 'Pending'),
-(3, '2025-03-16 09:15', 50.00, 'Partial mileage overcharge correction', 'Processed'),
-(8, '2025-04-15 09:40', 25.00, 'Discount adjustment after billing error', 'Processed'),
-(15, '2025-05-17 08:30', 50.00, 'Customer loyalty adjustment', 'Processed'),
-(25, '2025-07-06 09:00', 345.50, 'Rental not completed due to early return', 'Pending'),
-(18, '2025-06-01 10:30', 45.00, 'Minor complaint compensation', 'Processed');
+-- 🔹 Security Deposit Refunds (Full refunds)
+(1, GETDATE(), 300.00, 'Security deposit refund - vehicle returned in good condition', 'Processed'),
+(2, GETDATE(), 300.00, 'Security deposit refund - vehicle returned in good condition', 'Processed'),
+(3, GETDATE(), 300.00, 'Security deposit refund - vehicle returned in good condition', 'Processed'),
+(4, GETDATE(), 200.00, 'Partial refund - minor scratch fee deducted from deposit', 'Processed'),
+(5, GETDATE(), 300.00, 'Security deposit refund - vehicle returned in good condition', 'Processed'),
+
+-- 🔹 Other Refunds
+(6, GETDATE(), 120.00, 'Early return refund - 1 unused day credited', 'Processed'),
+(7, GETDATE(), 100.00, 'Service issue refund - delay due to vehicle maintenance', 'Processed');
 GO
 
---------------------------------------------------------
--- Create Accounting_Entry Table under Finance Schema
---------------------------------------------------------
-CREATE TABLE Finance.Accounting_Entry (
-    accounting_entry_id INT IDENTITY(1,1) PRIMARY KEY,
-    payment_id INT NOT NULL,                           -- FK to Finance.Rental_Payment
-    branch_id INT NOT NULL,                            -- FK to Operation.Branch
-    transaction_date DATETIME NOT NULL DEFAULT GETDATE(),
-    debit_amount DECIMAL(10,2) NULL,                   -- Expenses or outflows (e.g., refunds, maintenance)
-    credit_amount DECIMAL(10,2) NULL,                  -- Income or inflows (e.g., rental payments)
-    created_at DATETIME NOT NULL DEFAULT GETDATE(),
-    updated_at DATETIME NULL,
-    remarks VARCHAR(200) NULL,
-
-    CONSTRAINT FK_accounting_payment 
-        FOREIGN KEY (payment_id) REFERENCES Finance.Rental_Payment(payment_id),
-
-    CONSTRAINT FK_accounting_branch 
-        FOREIGN KEY (branch_id) REFERENCES Operation.Branch(branch_id)
-);
-GO
-
---------------------------------------------------------
--- Insert Sample Data into Finance.Accounting_Entry
---------------------------------------------------------
-INSERT INTO Finance.Accounting_Entry
-(payment_id, branch_id, transaction_date, debit_amount, credit_amount, remarks)
-VALUES
-(1, 1, '2025-03-05 10:15', NULL, 245.50, 'Rental payment credited to Branch 1'),
-(2, 2, '2025-03-10 09:40', NULL, 265.00, 'Rental payment credited to Branch 2'),
-(3, 3, '2025-03-15 10:25', NULL, 275.40, 'Rental payment credited to Branch 3'),
-(4, 4, '2025-03-25 11:30', NULL, 360.00, 'Rental payment credited to Branch 4'),
-(5, 5, '2025-03-27 10:00', 150.00, NULL, 'Refund issued due to cancellation'),
-(6, 1, '2025-04-05 09:20', NULL, 198.75, 'Rental payment received'),
-(7, 2, '2025-04-10 08:30', NULL, 175.25, 'Rental payment received'),
-(8, 3, '2025-04-15 09:40', 25.00, NULL, 'Small refund adjustment'),
-(9, 4, '2025-04-18 10:00', NULL, 220.00, 'Rental payment credited'),
-(10, 5, '2025-04-23 09:30', 198.00, NULL, 'Pending payment reversed'),
-(11, 6, '2025-04-29 10:00', NULL, 260.50, 'Rental payment completed'),
-(12, 7, '2025-05-03 09:40', 198.75, NULL, 'Full refund processed'),
-(13, 8, '2025-05-08 08:55', NULL, 370.00, 'Rental payment credited'),
-(14, 9, '2025-05-13 09:30', NULL, 295.50, 'Luxury vehicle rental income'),
-(15, 10, '2025-05-17 08:30', 50.00, NULL, 'Loyalty refund adjustment'),
-(16, 1, '2025-05-21 09:45', NULL, 250.00, 'Rental payment credited'),
-(17, 2, '2025-05-26 10:10', 250.00, NULL, 'Payment failure refund'),
-(18, 3, '2025-05-31 09:20', NULL, 295.20, 'Rental income'),
-(19, 4, '2025-06-05 08:35', NULL, 280.00, 'Rental payment credited'),
-(20, 5, '2025-06-09 08:30', 300.00, NULL, 'Refund due to vehicle maintenance issue');
-GO
-
---------------------------------------------------------
--- Create Invoice Table
---------------------------------------------------------
+------------------------------------------------------------
+-- Create Finance.Invoice Table
+------------------------------------------------------------
 CREATE TABLE Finance.Invoice (
     invoice_id INT IDENTITY(1,1) PRIMARY KEY,
     branch_id INT NOT NULL,
     rental_id INT NOT NULL,
     customer_id INT NOT NULL,
     invoice_date DATETIME NOT NULL DEFAULT GETDATE(),
-    subtotal_amount DECIMAL(11,2) NOT NULL,
-    tax_amount      DECIMAL(11,2) NOT NULL,
-    discount_amount DECIMAL(11,2) NULL,
-    total_amount    DECIMAL(11,2) NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT GETDATE(),
+    subtotal_amount DECIMAL(10,2) NOT NULL,
+    tax_amount DECIMAL(10,2) NOT NULL,
+    discount_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+    total_amount DECIMAL(10,2) NOT NULL,
+    created_at DATETIME DEFAULT GETDATE(),
 
-    -- One invoice per rental
-    CONSTRAINT UQ_Invoice_Rental UNIQUE (rental_id),
+    CONSTRAINT FK_invoice_branch
+        FOREIGN KEY (branch_id)
+        REFERENCES Operation.Branch(branch_id),
 
-    -- Non-negative amounts
-    CONSTRAINT CK_Invoice_NonNegative
-        CHECK (
-            subtotal_amount >= 0
-            AND tax_amount >= 0
-            AND (discount_amount IS NULL OR discount_amount >= 0)
-            AND total_amount >= 0
-        ),
+    CONSTRAINT FK_invoice_rental
+        FOREIGN KEY (rental_id)
+        REFERENCES Rental.Rental(rental_id),
 
-    -- Arithmetic consistency
-    CONSTRAINT CK_Invoice_TotalConsistency
-        CHECK (
-            total_amount = subtotal_amount - COALESCE(discount_amount, 0) + tax_amount
-        ),
-
-    CONSTRAINT FK_Invoice_Branch FOREIGN KEY (branch_id)
-        REFERENCES Operation.Branch(branch_id)
-        ON DELETE NO ACTION ON UPDATE NO ACTION,
-
-    CONSTRAINT FK_Invoice_Customer FOREIGN KEY (customer_id)
+    CONSTRAINT FK_invoice_customer
+        FOREIGN KEY (customer_id)
         REFERENCES Customer.Customer(customer_id)
-        ON DELETE NO ACTION ON UPDATE NO ACTION,
-
-    CONSTRAINT FK_Invoice_Rental FOREIGN KEY (rental_id)
-        REFERENCES Rental.Rental(rental_id)
-        ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 GO
 
---------------------------------------------------------
--- Insert Sample Data into Finance.Invoice
---------------------------------------------------------
-INSERT INTO Finance.Invoice
-(branch_id, rental_id, customer_id, subtotal_amount, tax_amount, discount_amount, total_amount)
-VALUES
--- rental 1 (customer 1)
-(1,  1,  1, 245.50, 18.41, 0.00, 263.91),
--- rental 2 (customer 2)
-(2,  2,  2, 265.00, 19.13, 10.00, 274.13),
--- rental 3 (customer 3)
-(3,  3,  3, 275.40, 20.27, 5.00, 290.67),
--- rental 4 (customer 4)
-(4,  4,  4, 360.00, 28.80, 0.00, 388.80),
--- rental 6 (customer 6)
-(5,  6,  6, 198.75, 14.90, 0.00, 213.65),
--- rental 7 (customer 7)
-(6,  7,  7, 175.25, 13.14, 0.00, 188.39),
--- rental 8 (customer 8)
-(7,  8,  8, 186.50, 13.64, 5.00, 195.14),
--- rental 9 (customer 9)
-(8,  9,  9, 220.00, 17.60, 0.00, 237.60),
--- rental 11 (customer 11)
-(9, 11, 11, 260.50, 20.00, 10.50, 270.00),
--- rental 13 (customer 13)
-(10, 13, 13, 370.00, 29.60, 0.00, 399.60),
--- rental 14 (customer 14)
-(11, 14, 14, 295.50, 22.40, 15.50, 302.40),
--- rental 15 (customer 15)
-(12, 15, 15, 185.00, 13.32, 0.00, 198.32),
--- rental 16 (customer 16)
-(13, 16, 16, 250.00, 18.75, 0.00, 268.75),
--- rental 18 (customer 18)
-(14, 18, 18, 295.20, 23.00, 5.20, 313.00),
--- rental 19 (customer 19)
-(15, 19, 19, 280.00, 22.40, 0.00, 302.40);
-GO
-
---------------------------------------------------------
--- Create Invoice_Line Table
---------------------------------------------------------
+------------------------------------------------------------
+-- Create Finance.Invoice_Line Table
+------------------------------------------------------------
 CREATE TABLE Finance.Invoice_Line (
     invoice_line_id INT IDENTITY(1,1) PRIMARY KEY,
     invoice_id INT NOT NULL,
-    rental_id INT NOT NULL,
-    item_description VARCHAR(200) NOT NULL,
+    rental_id INT NULL,
+    line_description VARCHAR(200) NOT NULL,
     quantity DECIMAL(10,2) NOT NULL DEFAULT 1,
     unit_price DECIMAL(10,2) NOT NULL,
-    line_amount AS (quantity * unit_price) PERSISTED,  -- auto-calculated
-    tax_rate DECIMAL(5,2) NULL,
+    line_amount AS (quantity * unit_price) PERSISTED,
+    tax_rate DECIMAL(10,2) NULL,
     tax_amount DECIMAL(10,2) NULL,
-    created_at DATETIME NOT NULL DEFAULT GETDATE(),
+    created_at DATETIME DEFAULT GETDATE(),
 
-    --------------------------------------------------------
-    -- FK to Invoice
-    --------------------------------------------------------
-    CONSTRAINT FK_InvoiceLine_Invoice FOREIGN KEY (invoice_id)
+    CONSTRAINT FK_invoice_line_invoice
+        FOREIGN KEY (invoice_id)
         REFERENCES Finance.Invoice(invoice_id)
-        ON DELETE CASCADE       -- If invoice deleted, delete all lines
-        ON UPDATE CASCADE,      -- Keep line items aligned with updated IDs
+        ON DELETE CASCADE,
 
-    --------------------------------------------------------
-    -- FK to Rental
-    --------------------------------------------------------
-    CONSTRAINT FK_InvoiceLine_Rental FOREIGN KEY (rental_id)
+    CONSTRAINT FK_invoice_line_rental
+        FOREIGN KEY (rental_id)
         REFERENCES Rental.Rental(rental_id)
-        ON DELETE NO ACTION     --Prevent accidental loss of rental data
-        ON UPDATE CASCADE       --Allow rental_id changes (rare)
 );
 GO
 
---------------------------------------------------------
--- Insert Sample Data into Finance.Invoice_Line
---------------------------------------------------------
-INSERT INTO Finance.Invoice_Line
-(invoice_id, rental_id, item_description, quantity, unit_price, tax_rate, tax_amount)
-VALUES
--- Invoice 1
-(1, 1, 'Base Rental Charge (3 days)', 3, 75.00, 7.50, 16.88),
-(1, 1, 'GPS Add-on', 1, 15.00, 7.50, 1.13),
+-- Trigger for Invoice
 
--- Invoice 2
-(2, 2, 'Base Rental Charge (3 days)', 3, 80.00, 7.25, 17.40),
-(2, 2, 'Collision Damage Waiver (CDW)', 1, 20.00, 7.25, 1.45),
+CREATE OR ALTER TRIGGER Rental.trg_GenerateInvoice_AfterRentalCompletion
+ON Rental.Rental
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
 
--- Invoice 3
-(3, 3, 'Base Rental Charge (4 days)', 4, 70.00, 7.25, 20.30),
-(3, 3, 'Child Seat', 1, 10.00, 7.25, 0.73),
-
--- Invoice 4
-(4, 4, 'Base Rental Charge (5 days)', 5, 72.00, 8.00, 28.80),
-(4, 4, 'Insurance Coverage', 1, 30.00, 8.00, 2.40),
-
--- Invoice 6
-(5, 6, 'Base Rental Charge (4 days)', 4, 60.00, 7.25, 17.40),
-(5, 6, 'GPS Add-on', 1, 15.00, 7.25, 1.09),
-
--- Invoice 7
-(6, 7, 'Base Rental Charge (2 days)', 2, 85.00, 7.50, 12.75),
-(6, 7, 'Roadside Assistance', 1, 10.00, 7.50, 0.75),
-
--- Invoice 8
-(7, 8, 'Base Rental Charge (3 days)', 3, 62.00, 7.25, 13.46),
-(7, 8, 'Full Insurance Package', 1, 25.00, 7.25, 1.81),
-
--- Invoice 9
-(8, 9, 'Base Rental Charge (3 days)', 3, 68.00, 8.00, 16.32),
-(8, 9, 'Premium GPS Add-on', 1, 20.00, 8.00, 1.60),
-
--- Invoice 11
-(9, 11, 'Base Rental Charge (4 days)', 4, 65.00, 7.25, 18.85),
-(9, 11, 'Fuel Refill Fee', 1, 30.00, 7.25, 2.18),
-
--- Invoice 12
-(10, 13, 'Base Rental Charge (5 days)', 5, 72.00, 7.25, 26.10),
-(10, 13, 'Luxury Car Surcharge', 1, 45.00, 7.25, 3.26),
-
--- Invoice 13
-(11, 14, 'Base Rental Charge (4 days)', 4, 70.00, 7.25, 20.30),
-(11, 14, 'Insurance Coverage', 1, 25.00, 7.25, 1.81),
-
--- Invoice 14
-(12, 15, 'Base Rental Charge (3 days)', 3, 65.00, 7.25, 14.14),
-(12, 15, 'GPS Add-on', 1, 15.00, 7.25, 1.09),
-
--- Invoice 15
-(13, 16, 'Base Rental Charge (4 days)', 4, 68.00, 8.00, 21.76),
-(13, 16, 'Collision Damage Waiver (CDW)', 1, 25.00, 8.00, 2.00);
-GO
-
---------------------------------------------------------
--- Create Tax Table under Finance Schema
---------------------------------------------------------
-CREATE TABLE Finance.Tax (
-    tax_id INT IDENTITY(1,1) PRIMARY KEY,
-    estimate_id INT NOT NULL,
-    branch_id INT NOT NULL,
-    tax_name VARCHAR(30) NOT NULL,
-    tax_rate DECIMAL(5,2) NOT NULL CHECK (tax_rate >= 0),
-    effective_start_date DATE NOT NULL,
-    effective_end_date DATE NULL,
-    tax_notes VARCHAR(150) NULL,
-
-    --------------------------------------------------------
-    -- Foreign Keys
-    --------------------------------------------------------
-    CONSTRAINT FK_tax_estimate
-        FOREIGN KEY (estimate_id)
-        REFERENCES Finance.Rental_Estimate(estimate_id)
-        ON DELETE CASCADE       --  If estimate removed, delete its tax data
-        ON UPDATE CASCADE,
-
-    CONSTRAINT FK_tax_branch
-        FOREIGN KEY (branch_id)
-        REFERENCES Operation.Branch(branch_id)
-        ON DELETE NO ACTION      -- Don’t delete tax history if branch removed
-        ON UPDATE CASCADE
-);
-GO
-
---------------------------------------------------------
--- Insert Sample Data into Finance.Tax
---------------------------------------------------------
-INSERT INTO Finance.Tax
-(estimate_id, branch_id, tax_name, tax_rate, effective_start_date, effective_end_date, tax_notes)
-VALUES
-(1, 1, 'State Tax', 7.25, '2024-01-01', NULL, 'Standard state vehicle rental tax'),
-(2, 2, 'City Tax', 3.50, '2024-01-01', NULL, 'City transportation surcharge'),
-(3, 3, 'Environmental Fee', 1.25, '2024-01-01', NULL, 'Eco sustainability fund'),
-(4, 4, 'State Tax', 7.00, '2024-01-01', NULL, 'General state tax for rentals'),
-(5, 5, 'Tourism Tax', 4.50, '2024-01-01', NULL, 'Applies to tourist rental zones'),
-(6, 6, 'State Tax', 7.25, '2024-01-01', NULL, NULL),
-(7, 7, 'Local Tax', 2.50, '2024-01-01', NULL, 'Minor local rental tax'),
-(8, 8, 'Road Maintenance Fee', 1.75, '2024-01-01', NULL, 'Road infrastructure maintenance fund'),
-(9, 9, 'Airport Surcharge', 5.00, '2024-01-01', NULL, 'Applicable to airport branches'),
-(10, 10, 'State Tax', 7.25, '2024-01-01', NULL, 'Applies statewide'),
-(11, 11, 'Environmental Fee', 1.50, '2024-01-01', NULL, 'Environmental recovery charge'),
-(12, 12, 'Tourism Tax', 3.75, '2024-01-01', NULL, NULL),
-(13, 13, 'Luxury Vehicle Tax', 9.00, '2024-01-01', NULL, 'Applies to premium class rentals'),
-(14, 14, 'City Surcharge', 2.25, '2024-01-01', NULL, 'Applies to high-traffic city locations'),
-(15, 15, 'Electric Vehicle Discount', 0.00, '2024-01-01', NULL, 'No tax for electric vehicle rentals');
-GO
-
---------------------------------------------------------
--- Create Charge_Type Table under Finance Schema (final)
---------------------------------------------------------
-CREATE TABLE Finance.Charge_Type (
-    charge_type_id INT IDENTITY(1,1) PRIMARY KEY,
-    charge_code VARCHAR(10) NOT NULL UNIQUE,       -- e.g., 'BASE', 'GPS', 'INS'
-    charge_name VARCHAR(50) NOT NULL,              -- Descriptive name
-    charge_category VARCHAR(30) NULL,              -- e.g., 'Rental', 'Insurance', 'Fee'
-    charge_basis VARCHAR(30) NULL,                 -- e.g., 'Per Day', 'Flat Rate', 'Per Hour'
-
-    CONSTRAINT CK_ChargeType_Basis CHECK (
-        charge_basis IN ('Per Day','Per Hour','Flat Rate','Per Week','Per Month')
-        OR charge_basis IS NULL
+    ------------------------------------------------------------
+    -- STEP 1: Insert into Invoice (only for Completed & no existing invoice)
+    ------------------------------------------------------------
+    INSERT INTO Finance.Invoice (
+        branch_id,
+        rental_id,
+        customer_id,
+        invoice_date,
+        subtotal_amount,
+        tax_amount,
+        discount_amount,
+        total_amount,
+        created_at
     )
-);
+    SELECT 
+        rs.pickup_branch_id,
+        r.rental_id,
+        r.customer_id,
+        GETDATE(),
+        re.base_rate + re.surcharge_total AS subtotal_amount,
+        re.tax_total,
+        re.discount_total,
+        (re.total_estimate + r.security_deposit) AS total_amount,
+        GETDATE()
+    FROM Rental.Rental r
+    INNER JOIN inserted i ON r.rental_id = i.rental_id
+    INNER JOIN Rental.Reservation rs ON r.reservation_id = rs.reservation_id
+    INNER JOIN Finance.Rental_Estimate re ON re.reservation_id = rs.reservation_id
+    WHERE i.rental_status = 'Completed'
+      AND NOT EXISTS (
+          SELECT 1 FROM Finance.Invoice inv WHERE inv.rental_id = r.rental_id
+      );
+
+    ------------------------------------------------------------
+    -- STEP 2: Base Rental Fee Line
+    ------------------------------------------------------------
+    INSERT INTO Finance.Invoice_Line (
+        invoice_id, rental_id, line_description, quantity, unit_price
+    )
+    SELECT 
+        inv.invoice_id,
+        r.rental_id,
+        'Base Rental Charge',
+        1,
+        re.base_rate
+    FROM Finance.Invoice inv
+    JOIN Rental.Rental r ON inv.rental_id = r.rental_id
+    JOIN Finance.Rental_Estimate re ON re.reservation_id = r.reservation_id
+    WHERE NOT EXISTS (
+        SELECT 1 FROM Finance.Invoice_Line il 
+        WHERE il.invoice_id = inv.invoice_id AND il.line_description = 'Base Rental Charge'
+    );
+
+    ------------------------------------------------------------
+    -- STEP 3: Add-on Charges (from Reservation_Charge)
+    ------------------------------------------------------------
+    INSERT INTO Finance.Invoice_Line (
+        invoice_id, rental_id, line_description, quantity, unit_price
+    )
+    SELECT 
+        inv.invoice_id,
+        r.rental_id,
+        ct.charge_name,
+        rc.quantity,
+        rch.charge_unit_rate
+    FROM Finance.Invoice inv
+    JOIN Rental.Rental r ON inv.rental_id = r.rental_id
+    JOIN Rental.Reservation_Charge rc ON rc.reservation_id = r.reservation_id
+    JOIN Finance.Charge_Rate rch ON rc.charge_rate_id = rch.charge_rate_id
+    JOIN Finance.Charge_Type ct ON rch.charge_type_id = ct.charge_type_id
+    WHERE NOT EXISTS (
+        SELECT 1 FROM Finance.Invoice_Line il 
+        WHERE il.invoice_id = inv.invoice_id AND il.line_description = ct.charge_name
+    );
+
+    ------------------------------------------------------------
+    -- STEP 4: Taxes, Discounts, and Security Deposit
+    ------------------------------------------------------------
+    INSERT INTO Finance.Invoice_Line (invoice_id, rental_id, line_description, quantity, unit_price)
+    SELECT inv.invoice_id, r.rental_id, 'Tax Total', 1, re.tax_total
+    FROM Finance.Invoice inv
+    JOIN Rental.Rental r ON inv.rental_id = r.rental_id
+    JOIN Finance.Rental_Estimate re ON re.reservation_id = r.reservation_id
+    WHERE re.tax_total > 0;
+
+    INSERT INTO Finance.Invoice_Line (invoice_id, rental_id, line_description, quantity, unit_price)
+    SELECT inv.invoice_id, r.rental_id, 'Discount Applied', 1, -re.discount_total
+    FROM Finance.Invoice inv
+    JOIN Rental.Rental r ON inv.rental_id = r.rental_id
+    JOIN Finance.Rental_Estimate re ON re.reservation_id = r.reservation_id
+    WHERE re.discount_total > 0;
+
+    INSERT INTO Finance.Invoice_Line (invoice_id, rental_id, line_description, quantity, unit_price)
+    SELECT inv.invoice_id, r.rental_id, 'Refundable Security Deposit', 1, r.security_deposit
+    FROM Finance.Invoice inv
+    JOIN Rental.Rental r ON inv.rental_id = r.rental_id
+    WHERE r.security_deposit > 0;
+
+END;
 GO
 
-INSERT INTO Finance.Charge_Type
-(charge_code, charge_name, charge_category, charge_basis)
-VALUES
-('BASE', 'Base Rental Charge', 'Rental', 'Per Day'),
-('GPS', 'GPS Navigation System', 'Add-On', 'Flat Rate'),
-('INS', 'Insurance Coverage', 'Insurance', 'Per Day'),
-('CDW', 'Collision Damage Waiver', 'Insurance', 'Per Day'),
-('CHSEAT', 'Child Seat', 'Add-On', 'Flat Rate'),
-('FUEL', 'Fuel Refill Fee', 'Fee', 'Flat Rate'),
-('LUX', 'Luxury Vehicle Surcharge', 'Surcharge', 'Per Day'),
-('ROADS', 'Roadside Assistance', 'Add-On', 'Flat Rate'),
-('CLEAN', 'Cleaning Fee', 'Fee', 'Flat Rate'),
-('DELAY', 'Late Return Penalty', 'Fee', 'Per Hour'),
-('ELEC', 'Electric Vehicle Charging', 'Usage', 'Per Hour'),
-('ENV', 'Environmental Fee', 'Fee', 'Flat Rate'),
-('TOUR', 'Tourism Surcharge', 'Tax', 'Flat Rate'),
-('LOYAL', 'Loyalty Discount', 'Discount', 'Flat Rate');
-GO
 
---------------------------------------------------------
--- Create Rental_Charge Table under Finance Schema
---------------------------------------------------------
-CREATE TABLE Finance.Rental_Charge (
-    rental_charge_id INT IDENTITY(1,1) PRIMARY KEY,
-    estimate_id INT NOT NULL,
-    branch_id INT NOT NULL,
-    charge_type_id INT NOT NULL,
-    charge_date DATETIME NOT NULL DEFAULT GETDATE(),
-    charge_description VARCHAR(200) NULL,
-    charge_unit_quantity DECIMAL(10,2) NULL CHECK (charge_unit_quantity >= 0),
-    charge_unit_rate DECIMAL(10,2) NULL CHECK (charge_unit_rate >= 0),
-    charge_amount AS (charge_unit_quantity * charge_unit_rate) PERSISTED, -- ✅ auto-calculated total
-    created_at DATETIME NOT NULL DEFAULT GETDATE(),
+--- Because my rental records were completed before. 
 
-    --------------------------------------------------------
-    -- Foreign Keys
-    --------------------------------------------------------
-    CONSTRAINT FK_rental_charge_estimate 
-        FOREIGN KEY (estimate_id) 
-        REFERENCES Finance.Rental_Estimate(estimate_id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-
-    CONSTRAINT FK_rental_charge_branch 
-        FOREIGN KEY (branch_id) 
-        REFERENCES Operation.Branch(branch_id)
-        ON DELETE NO ACTION
-        ON UPDATE CASCADE,
-
-    CONSTRAINT FK_rental_charge_type 
-        FOREIGN KEY (charge_type_id) 
-        REFERENCES Finance.Charge_Type(charge_type_id)
-        ON DELETE NO ACTION
-        ON UPDATE CASCADE
-);
-GO
-
---------------------------------------------------------
--- Corrected Insert into Finance.Rental_Charge
---------------------------------------------------------
-INSERT INTO Finance.Rental_Charge
-(estimate_id, branch_id, charge_type_id, charge_date, charge_description, charge_unit_quantity, charge_unit_rate)
-VALUES
-(1, 1, 5, '2025-03-01', 'Base Rental Charge (3 Days)', 3, 75.00),
-(1, 1, 6, '2025-03-01', 'GPS Add-on', 1, 15.00),
-(2, 2, 5, '2025-03-07', 'Base Rental Charge (3 Days)', 3, 80.00),
-(2, 2, 7, '2025-03-07', 'Insurance Coverage', 1, 20.00),
-(3, 3, 5, '2025-03-12', 'Base Rental Charge (4 Days)', 4, 70.00),
-(3, 3, 9, '2025-03-12', 'Child Seat', 1, 10.00),
-(4, 4, 5, '2025-03-20', 'Base Rental Charge (5 Days)', 5, 72.00),
-(4, 4, 8, '2025-03-20', 'Collision Damage Waiver', 1, 30.00),
-(5, 5, 5, '2025-03-26', 'Base Rental Charge (2 Days)', 2, 65.00),
-(5, 5, 12, '2025-03-26', 'Roadside Assistance', 1, 10.00),
-(6, 6, 5, '2025-04-01', 'Base Rental Charge (3 Days)', 3, 68.00),
-(6, 6, 11, '2025-04-01', 'Luxury Vehicle Surcharge', 1, 25.00),
-(7, 7, 5, '2025-04-08', 'Base Rental Charge (4 Days)', 4, 60.00),
-(7, 7, 7, '2025-04-08', 'Insurance Coverage', 1, 15.00),
-(8, 8, 5, '2025-04-15', 'Base Rental Charge (3 Days)', 3, 70.00);
-GO
+UPDATE Rental.Rental
+SET rental_status = 'Completed'
+WHERE rental_status = 'Completed';
 
 
---------------------------------------------------------
--- Create Loyalty Table (with optional membership)
---------------------------------------------------------
-CREATE TABLE Customer.Loyalty (
-    loyalty_id INT IDENTITY(1,1) PRIMARY KEY,
-    customer_id INT NOT NULL,
-    loyalty_type VARCHAR(20) NULL CHECK (loyalty_type IN ('Basic','Silver','Gold','Platinum') OR loyalty_type IS NULL),
-    loyalty_rewards DECIMAL(10,2) NULL CHECK (loyalty_rewards IS NULL OR loyalty_rewards >= 0),
-    loyalty_join_date DATE NULL DEFAULT CAST(GETDATE() AS DATE),
 
-    CONSTRAINT FK_loyalty_customer
-        FOREIGN KEY (customer_id)
-        REFERENCES Customer.Customer(customer_id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-GO
-
---------------------------------------------------------
--- Insert Sample Data into Customer.Loyalty (mixed enrollment)
---------------------------------------------------------
-INSERT INTO Customer.Loyalty
-(customer_id, loyalty_type, loyalty_rewards, loyalty_join_date)
-VALUES
-(1,  'Silver',   125.00, '2023-02-15'),
-(2,  'Gold',     260.50, '2022-08-10'),
-(3,  NULL,        NULL,   NULL),
-(4,  'Platinum', 480.00, '2021-09-03'),
-(5,  'Silver',   175.25, '2022-05-14'),
-(6,  NULL,        NULL,   NULL),
-(7,  'Gold',     315.00, '2023-11-21'),
-(8,  NULL,        NULL,   NULL),
-(9,  'Silver',   145.00, '2023-07-08'),
-(10, NULL,        NULL,   NULL),
-(11, 'Platinum', 500.00, '2021-12-11'),
-(12, 'Basic',     55.00,  '2024-02-01'),
-(13, NULL,        NULL,   NULL),
-(14, 'Gold',     275.75, '2022-09-10'),
-(15, 'Basic',     20.00,  '2024-05-02'),
-(16, 'Silver',   195.50, '2023-04-20'),
-(17, NULL,        NULL,   NULL),
-(18, 'Gold',     310.00, '2022-11-23'),
-(19, 'Silver',   140.00, '2023-01-30'),
-(20, NULL,        NULL,   NULL),
-(21, 'Platinum', 550.00, '2021-06-25'),
-(22, 'Gold',     290.00, '2022-12-14'),
-(23, 'Silver',   165.00, '2023-08-02'),
-(24, NULL,        NULL,   NULL),
-(25, 'Gold',     285.00, '2022-09-18');
-GO
-
---------------------------------------------------------
--- Create Promotions Table under Finance Schema
---------------------------------------------------------
-CREATE TABLE Finance.Promotions (
-    promotion_id INT IDENTITY(1,1) PRIMARY KEY,
-    loyalty_id INT NULL,
-    estimate_id INT NULL,
-    promotion_code VARCHAR(20) NOT NULL UNIQUE,
-    promotion_name VARCHAR(50) NOT NULL,
-    promotion_description VARCHAR(150) NULL,
-    promotion_value DECIMAL(10,2) NOT NULL CHECK (promotion_value >= 0),
-    promotion_type VARCHAR(30) NOT NULL 
-        CHECK (promotion_type IN ('Public','Loyalty','Seasonal','Referral','Corporate')),
-    promotion_start_date DATETIME NOT NULL,
-    promotion_end_date DATETIME NOT NULL,
-    is_active BIT NOT NULL DEFAULT 1,
-    created_at DATETIME NOT NULL DEFAULT GETDATE(),
-
-    --------------------------------------------------------
-    -- Table-level CHECK constraint (valid date range)
-    --------------------------------------------------------
-    CONSTRAINT CK_Promotions_DateRange 
-        CHECK (promotion_end_date > promotion_start_date),
-
-    --------------------------------------------------------
-    -- Foreign Keys (optional)
-    --------------------------------------------------------
-    CONSTRAINT FK_promotions_loyalty
-        FOREIGN KEY (loyalty_id)
-        REFERENCES Customer.Loyalty(loyalty_id)
-        ON DELETE SET NULL
-        ON UPDATE CASCADE,
-
-    CONSTRAINT FK_promotions_estimate
-        FOREIGN KEY (estimate_id)
-        REFERENCES Finance.Rental_Estimate(estimate_id)
-        ON DELETE SET NULL
-        ON UPDATE CASCADE
-);
-GO
-
---------------------------------------------------------
--- Insert Sample Data into Finance.Promotions
---------------------------------------------------------
-INSERT INTO Finance.Promotions
-(loyalty_id, estimate_id, promotion_code, promotion_name, promotion_description,
- promotion_value, promotion_type, promotion_start_date, promotion_end_date, is_active)
-VALUES
--- Public Promotions
-(NULL,  NULL, 'SPRING10',   'Spring Sale', 
- '10% off all rentals during March and April', 
- 10.00, 'Public', '2025-03-01', '2025-04-30', 1),
-
-(NULL,  NULL, 'NEWCUSTOMER50', 'Welcome Offer', 
- '50% off for first-time customers', 
- 50.00, 'Public', '2025-01-01', '2025-06-30', 1),
-
-(NULL,  NULL, 'STUDENT15', 'Student Discount', 
- '15% off with valid student ID', 
- 15.00, 'Public', '2025-04-01', '2025-12-31', 1),
-
-(NULL,  NULL, 'WEEKEND25', 'Weekend Saver', 
- '25% off weekend rentals (Fri–Sun only)', 
- 25.00, 'Public', '2025-05-01', '2025-09-01', 1),
-
-(NULL,  NULL, 'ECO5', 'Eco Drive', 
- '5% off hybrid and electric vehicles', 
- 5.00, 'Public', '2025-03-01', '2025-12-31', 1),
-
-
--- Loyalty-Based Promotions
-(1,  1,  'LOYAL15', 'Silver Bonus', 
- '15% discount for Silver loyalty members', 
- 15.00, 'Loyalty', '2025-01-01', '2025-12-31', 1),
-
-(2,  2,  'GOLD25', 'Gold Elite Offer', 
- '25% discount for Gold loyalty members', 
- 25.00, 'Loyalty', '2025-01-01', '2025-12-31', 1),
-
-(4,  4,  'PLAT40', 'Platinum Reward', 
- '40% discount for Platinum members', 
- 40.00, 'Loyalty', '2025-02-01', '2025-12-31', 1),
-
-(7,  7,  'LOYAL05', 'Member Appreciation', 
- '5% loyalty bonus for active members', 
- 5.00, 'Loyalty', '2025-03-01', '2025-12-31', 1),
-
-(10, 10, 'LOYAL20', 'Gold Annual Reward', 
- '20% annual discount for Gold loyalty members', 
- 20.00, 'Loyalty', '2025-01-01', '2025-12-31', 1),
-
-
--- Seasonal Promotions
-(NULL,  3,  'SUMMER20', 'Summer Savings', 
- '20% discount for rentals between June and August', 
- 20.00, 'Seasonal', '2025-06-01', '2025-08-31', 1),
-
-(NULL,  NULL, 'HOLIDAY30', 'Holiday Special', 
- '30% discount for bookings during holidays', 
- 30.00, 'Seasonal', '2025-12-01', '2026-01-05', 0),
-
-(NULL,  NULL, 'FALL10', 'Fall Discount', 
- '10% off all rentals during the fall season', 
- 10.00, 'Seasonal', '2025-09-01', '2025-11-30', 1),
-
-
--- Referral and Corporate Promotions
-(NULL,  5,  'REF10', 'Referral Bonus', 
- '10% off when referred by a friend', 
- 10.00, 'Referral', '2025-03-01', '2025-09-30', 1),
-
-(NULL,  8,  'CORP20', 'Corporate Deal', 
- '20% off for registered corporate partners', 
- 20.00, 'Corporate', '2025-01-01', '2025-12-31', 1);
-GO
 
 --------------------------------------------------------
 -- Create Employee_Role Table under Operation Schema
@@ -1278,6 +1763,7 @@ VALUES
 ('IT Support', 'Admin'),
 ('Regional Director', 'Admin');
 
+
 --------------------------------------------------------
 -- Create Employee Table under Operation Schema 
 --------------------------------------------------------
@@ -1304,7 +1790,6 @@ CREATE TABLE Operation.Employee (
         FOREIGN KEY (employee_role_id) REFERENCES Operation.Employee_Role(employee_role_id)
         ON DELETE NO ACTION ON UPDATE CASCADE
 );
-GO
 
 --------------------------------------------------------
 -- Insert data to Employees into Operation.Employee
@@ -1342,63 +1827,134 @@ VALUES
 (7, 4, 'Daniel', NULL, 'Rogers', 'daniel.rogers2@carrental.com', '507-555-7003', '1990-05-14', 'Male', '2015-05-11', 'Active'),
 (8, 9,  'Jacob', NULL, 'Hill', 'jacob.hill@carrental.com', '507-555-8001', '1990-07-30', 'Male', '2016-08-25', 'Active'),
 (8, 10, 'Grace', 'L', 'Young', 'grace.young@carrental.com', '507-555-8002', '1995-02-13', 'Female', '2020-06-02', 'Active'),
-(8, 10, 'Zoe', NULL, 'Reyes', 'zoe.reyes@carrental.com', '507-555-8003', '1998-04-20', 'Female', '2023-02-03', 'Active');
+(8, 10, 'Zoe', NULL, 'Reyes', 'zoe.reyes@carrental.com', '507-555-8003', '1998-04-20', 'Female', '2023-02-03', 'Active'),
+(9, 1, 'Aaron', NULL, 'Russell', 'aaron.russell@carrental.com', '507-555-9001', '1987-07-14', 'Male', '2015-08-01', 'Active'),
+(9, 2, 'Megan', NULL, 'Barnes', 'megan.barnes@carrental.com', '507-555-9002', '1993-11-25', 'Female', '2019-04-18', 'Active'),
+(9, 5, 'Tyler', 'H', 'Fisher', 'tyler.fisher@carrental.com', '507-555-9003', '1990-09-22', 'Male', '2018-06-12', 'Active'),
+
+-- Branch 10
+(10, 4, 'Ella', NULL, 'Russell', 'ella.russell@carrental.com', '507-555-10001', '1996-03-17', 'Female', '2020-02-01', 'Active'),
+(10, 8, 'Jason', NULL, 'Ng', 'jason.ng@carrental.com', '507-555-10002', '1989-05-03', 'Male', '2016-09-10', 'Active'),
+(10, 9, 'Kaitlyn', 'A', 'Turner', 'kaitlyn.turner@carrental.com', '507-555-10003', '1998-08-24', 'Female', '2023-03-21', 'Active'),
+
+-- Branch 11
+(11, 6, 'Patrick', NULL, 'Woods', 'patrick.woods@carrental.com', '507-555-11001', '1985-01-14', 'Male', '2014-04-22', 'Active'),
+(11, 10, 'Jasmine', NULL, 'Ortiz', 'jasmine.ortiz@carrental.com', '507-555-11002', '1995-06-30', 'Female', '2021-07-08', 'Active'),
+
+-- Branch 12
+(12, 3, 'Adrian', NULL, 'Long', 'adrian.long@carrental.com', '507-555-12001', '1991-02-11', 'Male', '2017-09-04', 'Active'),
+(12, 8, 'Samantha', NULL, 'Hughes', 'samantha.hughes@carrental.com', '507-555-12002', '1994-09-28', 'Female', '2020-10-05', 'Active'),
+
+-- Branch 13
+(13, 9, 'Liam', NULL, 'Murphy', 'liam.murphy@carrental.com', '507-555-13001', '1990-06-19', 'Male', '2016-03-18', 'Active'),
+(13, 2, 'Emily', NULL, 'Coleman', 'emily.coleman@carrental.com', '507-555-13002', '1995-12-05', 'Female', '2022-05-14', 'Active'),
+
+-- Branch 14
+(14, 1, 'Sean', NULL, 'Brooks', 'sean.brooks@carrental.com', '507-555-14001', '1988-03-09', 'Male', '2016-08-21', 'Active'),
+(14, 5, 'Isabella', NULL, 'Bennett', 'isabella.bennett@carrental.com', '507-555-14002', '1997-01-19', 'Female', '2022-09-13', 'Active'),
+
+-- Branch 15
+(15, 10, 'Owen', NULL, 'Phillips', 'owen.phillips@carrental.com', '507-555-15001', '1987-11-07', 'Male', '2015-01-15', 'Active'),
+(15, 4, 'Maya', NULL, 'Hernandez', 'maya.hernandez@carrental.com', '507-555-15002', '1996-02-20', 'Female', '2021-10-06', 'Active'),
+
+-- Branch 16
+(16, 8, 'Caleb', NULL, 'Foster', 'caleb.foster@carrental.com', '507-555-16001', '1989-10-01', 'Male', '2015-12-22', 'Active'),
+(16, 3, 'Natalie', NULL, 'Gomez', 'natalie.gomez@carrental.com', '507-555-16002', '1993-08-27', 'Female', '2020-01-19', 'Active'),
+
+-- Branch 17
+(17, 9, 'Henry', NULL, 'Perry', 'henry.perry@carrental.com', '507-555-17001', '1984-05-15', 'Male', '2012-10-02', 'Active'),
+(17, 6, 'Olivia', NULL, 'Sanders', 'olivia.sanders@carrental.com', '507-555-17002', '1992-06-03', 'Female', '2019-05-11', 'Active'),
+
+-- Branch 18
+(18, 2, 'Leo', NULL, 'Ward', 'leo.ward@carrental.com', '507-555-18001', '1991-04-09', 'Male', '2018-03-01', 'Active'),
+(18, 8, 'Aria', NULL, 'Bailey', 'aria.bailey@carrental.com', '507-555-18002', '1994-07-29', 'Female', '2020-08-12', 'Active'),
+
+-- Branch 19
+(19, 5, 'Mason', NULL, 'Torres', 'mason.torres@carrental.com', '507-555-19001', '1990-03-25', 'Male', '2016-05-10', 'Active'),
+(19, 10, 'Ella', NULL, 'Reed', 'ella.reed@carrental.com', '507-555-19002', '1998-09-16', 'Female', '2023-01-09', 'Active'),
+
+-- Branch 20
+(20, 1, 'Ethan', NULL, 'Garcia', 'ethan.garcia@carrental.com', '507-555-20001', '1986-02-14', 'Male', '2013-07-24', 'Active'),
+(20, 4, 'Sophie', NULL, 'Ferguson', 'sophie.ferguson@carrental.com', '507-555-20002', '1995-05-22', 'Female', '2020-03-03', 'Active'),
+
+-- Branches 21–30 (one per branch)
+(21, 3, 'Noah', NULL, 'Cole', 'noah.cole@carrental.com', '507-555-21001', '1990-07-09', 'Male', '2016-01-15', 'Active'),
+(22, 5, 'Layla', NULL, 'Simmons', 'layla.simmons@carrental.com', '507-555-22001', '1995-08-10', 'Female', '2020-06-22', 'Active'),
+(23, 7, 'Jacob', NULL, 'Rivera', 'jacob.rivera@carrental.com', '507-555-23001', '1989-09-01', 'Male', '2014-09-09', 'Active'),
+(24, 9, 'Sophia', NULL, 'Gray', 'sophia.gray@carrental.com', '507-555-24001', '1993-10-13', 'Female', '2019-10-01', 'Active'),
+(25, 2, 'Liam', NULL, 'Hall', 'liam.hall@carrental.com', '507-555-25001', '1988-12-21', 'Male', '2015-04-08', 'Active'),
+(26, 1, 'Zoe', NULL, 'Bennett', 'zoe.bennett@carrental.com', '507-555-26001', '1999-02-18', 'Female', '2023-03-02', 'Active'),
+(27, 10, 'Lucas', NULL, 'Mitchell', 'lucas.mitchell@carrental.com', '507-555-27001', '1994-03-17', 'Male', '2019-11-06', 'Active'),
+(28, 8, 'Ava', NULL, 'Cooper', 'ava.cooper@carrental.com', '507-555-28001', '1995-06-20', 'Female', '2021-05-15', 'Active'),
+(29, 4, 'Elijah', NULL, 'Harris', 'elijah.harris@carrental.com', '507-555-29001', '1987-07-23', 'Male', '2014-08-11', 'Active'),
+(30, 6, 'Mia', NULL, 'Ward', 'mia.ward@carrental.com', '507-555-30001', '1996-09-09', 'Female', '2021-04-02', 'Active');
 GO
 
---------------------------------------------------------
--- Create Vehicle_Warranty Table
---------------------------------------------------------
+
+------------------------------------------------------------
+-- Vehicle.Vehicle_Warranty
+------------------------------------------------------------
 CREATE TABLE Vehicle.Vehicle_Warranty (
     warranty_id INT IDENTITY(1,1) PRIMARY KEY,
-    vehicle_vin VARCHAR(17) NOT NULL,
+    vehicle_id INT NOT NULL,
+    warranty_provider VARCHAR(50) NOT NULL,
     warranty_type VARCHAR(30) NOT NULL,
-    warranty_provider VARCHAR(50) NULL,
-    warranty_period_months INT NOT NULL,
-    warranty_mileage_limit DECIMAL(10,2) NULL,
-    warranty_start_date DATE NOT NULL,
-    warranty_end_date DATE NOT NULL,
-    warranty_status VARCHAR(20) NOT NULL DEFAULT 'Active',
-    created_at DATETIME NOT NULL DEFAULT GETDATE(),
-    updated_at DATETIME NULL,
-
-    CONSTRAINT FK_VehicleWarranty_Vehicle FOREIGN KEY (vehicle_vin) REFERENCES Vehicle.Vehicle(vehicle_vin)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-
-    CONSTRAINT CK_Warranty_Expiry CHECK (warranty_end_date > warranty_start_date)
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    coverage_mileage INT NOT NULL,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('Active','Expired')),
+    CONSTRAINT FK_Warranty_Vehicle FOREIGN KEY (vehicle_id)
+        REFERENCES Vehicle.Vehicle(vehicle_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
---------------------------------------------------------
--- Insert data into Vehicle.Vehicle_Warranty
---------------------------------------------------------
-
-INSERT INTO Vehicle.Vehicle
-(vehicle_vin, vehicle_class_id, vehicle_type_id, fuel_type_id, purchase_id, branch_id,
- make, model, year, color, status, mileage)
+----------------
+-- Insert Data into Vehicle.Vehicle_Warranty
+-- Matches Vehicle.Vehicle records 
+------------------------------------------------------------
+INSERT INTO Vehicle.Vehicle_Warranty
+(vehicle_id, warranty_provider, warranty_type, start_date, end_date, coverage_mileage, status)
 VALUES
-('VIN0001A123456789', 1, 1, 1, 1, 1, 'Toyota', 'Camry', 2022, 'White', 'Available', 15400),
-('VIN0002B123456781', 1, 2, 1, 2, 2, 'Honda', 'CR-V', 2023, 'Blue', 'Available', 8200),
-('VIN0003C123456782', 2, 3, 2, 3, 3, 'Ford', 'F-150', 2021, 'Black', 'Rented', 24500),
-('VIN0004D123456783', 3, 2, 1, 4, 4, 'Chevrolet', 'Tahoe', 2022, 'Silver', 'Available', 17300),
-('VIN0005E123456784', 1, 1, 3, 5, 5, 'Hyundai', 'Elantra', 2021, 'Gray', 'Available', 26500),
-('VIN0006F123456785', 3, 1, 4, 6, 6, 'Tesla', 'Model 3', 2022, 'Red', 'Available', 11000),
-('VIN0007G123456786', 3, 1, 4, 7, 7, 'Nissan', 'Leaf', 2020, 'Blue', 'Maintenance', 28000),
-('VIN0008H123456787', 1, 1, 1, 8, 8, 'Toyota', 'Corolla', 2020, 'White', 'Available', 39000),
-('VIN0009I123456788', 2, 2, 1, 9, 1, 'Kia', 'Sorento', 2023, 'Black', 'Available', 8900),
-('VIN0010J123456789', 3, 2, 1, 10, 2, 'Ford', 'Escape', 2022, 'Gray', 'Rented', 14400),
-('VIN0011K123456780', 3, 3, 3, 11, 3, 'Hyundai', 'Tucson Hybrid', 2023, 'White', 'Available', 9600),
-('VIN0012L123456781', 1, 1, 1, 12, 4, 'Honda', 'Civic', 2022, 'Silver', 'Available', 15300),
-('VIN0013M123456782', 2, 2, 1, 13, 5, 'Chevrolet', 'Traverse', 2021, 'Blue', 'Rented', 27800),
-('VIN0014N123456783', 3, 3, 3, 14, 6, 'Tesla', 'Model Y', 2023, 'Black', 'Available', 6500),
-('VIN0015O123456784', 1, 1, 1, 15, 7, 'Mazda', '3 Sedan', 2022, 'Red', 'Available', 9900);
+(1, 'ToyotaCare', 'Standard', '2019-06-01', '2024-06-01', 60000, 'Active'),
+(2, 'Honda Assurance', 'Extended', '2020-07-15', '2026-07-15', 75000, 'Active'),
+(3, 'Ford Protect', 'Standard', '2018-03-10', '2023-03-10', 50000, 'Expired'),
+(4, 'Ford Protect', 'Premium', '2021-09-01', '2026-09-01', 80000, 'Active'),
+(5, 'Jeep Wave', 'Standard', '2020-01-20', '2025-01-20', 60000, 'Active'),
+(6, 'Hyundai Assurance', 'Extended', '2022-02-01', '2028-02-01', 100000, 'Active'),
+(7, 'Volkswagen Care', 'Standard', '2019-04-15', '2024-04-15', 60000, 'Active'),
+(8, 'Honda Assurance', 'Hybrid Coverage', '2023-03-01', '2028-03-01', 100000, 'Active'),
+(9, 'Nissan Extended Care', 'Standard', '2018-06-01', '2023-06-01', 60000, 'Expired'),
+(10, 'Honda Assurance', 'Standard', '2021-05-01', '2026-05-01', 75000, 'Active'),
+(11, 'Ford Protect', 'Standard', '2019-03-10', '2024-03-10', 60000, 'Active'),
+(12, 'Chevrolet Protection', 'Premium', '2021-04-01', '2027-04-01', 80000, 'Active'),
+(13, 'BMW UltimateCare', 'Premium', '2023-01-01', '2028-01-01', 100000, 'Active'),
+(14, 'BMW UltimateCare', 'Standard', '2022-07-01', '2027-07-01', 80000, 'Active'),
+(15, 'Nissan Extended Care', 'Standard', '2020-04-01', '2025-04-01', 60000, 'Active'),
+(16, 'Ford Protect', 'Standard', '2021-09-01', '2026-09-01', 75000, 'Active'),
+(17, 'ToyotaCare', 'Standard', '2022-03-01', '2027-03-01', 75000, 'Active'),
+(18, 'Chevrolet Protection', 'Standard', '2021-06-01', '2026-06-01', 60000, 'Active'),
+(19, 'Chevrolet Protection', 'Extended', '2023-03-01', '2029-03-01', 100000, 'Active'),
+(20, 'Ford Protect', 'Super Duty', '2022-08-01', '2027-08-01', 90000, 'Active'),
+(21, 'Jeep Wave', 'Premium', '2023-02-01', '2028-02-01', 80000, 'Active'),
+(22, 'Honda Assurance', 'Family', '2024-03-01', '2029-03-01', 90000, 'Active'),
+(23, 'Ford Protect', 'Commercial', '2023-09-01', '2028-09-01', 100000, 'Active'),
+(24, 'Tesla Care', 'Battery & Drivetrain', '2023-04-01', '2031-04-01', 150000, 'Active'),
+(25, 'Tesla Care', 'Comprehensive', '2024-05-01', '2032-05-01', 160000, 'Active'),
+(26, 'RAM Care', 'Standard', '2022-06-01', '2027-06-01', 80000, 'Active'),
+(27, 'Chevrolet Protection', 'Standard', '2021-02-01', '2026-02-01', 60000, 'Active'),
+(28, 'BMW UltimateCare', 'Extended', '2024-01-01', '2030-01-01', 120000, 'Active'),
+(29, 'Honda Assurance', 'Standard', '2020-06-01', '2025-06-01', 60000, 'Active'),
+(30, 'Mazda Extended Care', 'Standard', '2023-07-01', '2028-07-01', 75000, 'Active');
 GO
 
 --------------------------------------------------------
--- Create Vehicle_Registration Table 
+-- 
+-- Create Vehicle_Registration Table
 --------------------------------------------------------
 CREATE TABLE Vehicle.Vehicle_Registration (
     registration_id INT IDENTITY(1,1) PRIMARY KEY,
-    vehicle_vin VARCHAR(17) NOT NULL,
+    vehicle_id INT NOT NULL,
     registration_number VARCHAR(20) NOT NULL UNIQUE,
     license_plate VARCHAR(20) NOT NULL UNIQUE,
     registration_state VARCHAR(30) NOT NULL,
@@ -1409,8 +1965,8 @@ CREATE TABLE Vehicle.Vehicle_Registration (
     updated_at DATETIME NULL,
 
     CONSTRAINT FK_VehicleRegistration_Vehicle 
-        FOREIGN KEY (vehicle_vin) 
-        REFERENCES Vehicle.Vehicle(vehicle_vin)
+        FOREIGN KEY (vehicle_id) 
+        REFERENCES Vehicle.Vehicle(vehicle_id)
         ON DELETE CASCADE 
         ON UPDATE CASCADE,
 
@@ -1420,138 +1976,180 @@ CREATE TABLE Vehicle.Vehicle_Registration (
 GO
 
 --------------------------------------------------------
--- Insert Sample Data into Vehicle.Vehicle_Registration
+-- Insert 30 Records into Vehicle.Vehicle_Registration
+-- Matches Vehicle.Vehicle (vehicle_id 1–30)
 --------------------------------------------------------
 INSERT INTO Vehicle.Vehicle_Registration
-(vehicle_vin, registration_number, license_plate, registration_state, 
+(vehicle_id, registration_number, license_plate, registration_state,
  registration_issue_date, registration_expiry_date, registration_status)
 VALUES
-('VIN0001A123456789', 'REG2022MN001', 'MNX-3210', 'Minnesota', '2022-01-10', '2025-01-10', 'Active'),
-('VIN0002B123456781', 'REG2023CA002', 'CAZ-1145', 'California', '2023-03-15', '2026-03-15', 'Active'),
-('VIN0003C123456782', 'REG2021TX003', 'TXA-8891', 'Texas', '2021-06-01', '2024-06-01', 'Expired'),
-('VIN0004D123456783', 'REG2022NY004', 'NYH-5523', 'New York', '2022-08-20', '2025-08-20', 'Active'),
-('VIN0005E123456784', 'REG2021FL005', 'FLR-3390', 'Florida', '2021-12-05', '2024-12-05', 'Expired'),
-('VIN0006F123456785', 'REG2020NV006', 'NVG-7082', 'Nevada', '2020-02-10', '2023-02-10', 'Expired'),
-('VIN0007G123456786', 'REG2021WA007', 'WAP-4621', 'Washington', '2021-09-12', '2024-09-12', 'Active'),
-('VIN0008H123456787', 'REG2020IL008', 'ILB-9914', 'Illinois', '2020-05-01', '2023-05-01', 'Expired'),
-('VIN0009I123456788', 'REG2023AZ009', 'AZM-7765', 'Arizona', '2023-04-01', '2026-04-01', 'Active'),
-('VIN0010J123456789', 'REG2022OH010', 'OHC-1229', 'Ohio', '2022-07-07', '2025-07-07', 'Active'),
-('VIN0011K123456780', 'REG2021CO011', 'COV-3487', 'Colorado', '2021-03-22', '2024-03-22', 'Expired'),
-('VIN0012L123456781', 'REG2022GA012', 'GAT-6441', 'Georgia', '2022-10-10', '2025-10-10', 'Active'),
-('VIN0013M123456782', 'REG2020MI013', 'MIX-5533', 'Michigan', '2020-12-12', '2023-12-12', 'Expired'),
-('VIN0014N123456783', 'REG2021UT014', 'UTR-2208', 'Utah', '2021-02-18', '2024-02-18', 'Active'),
-('VIN0015O123456784', 'REG2023WI015', 'WIX-8832', 'Wisconsin', '2023-05-10', '2026-05-10', 'Active');
+(1,  'REG20250001', 'MN-4821A', 'Minnesota', '2024-06-01', '2026-06-01', 'Active'),
+(2,  'REG20250002', 'CA-5823B', 'California', '2024-07-10', '2026-07-10', 'Active'),
+(3,  'REG20250003', 'TX-9320C', 'Texas', '2023-05-12', '2025-05-12', 'Active'),
+(4,  'REG20250004', 'IL-2309D', 'Illinois', '2021-09-01', '2023-09-01', 'Expired'),
+(5,  'REG20250005', 'NY-7534E', 'New York', '2024-03-15', '2026-03-15', 'Active'),
+(6,  'REG20250006', 'FL-8721F', 'Florida', '2023-08-20', '2025-08-20', 'Active'),
+(7,  'REG20250007', 'TX-2904G', 'Texas', '2024-02-10', '2026-02-10', 'Active'),
+(8,  'REG20250008', 'WA-3187H', 'Washington', '2023-04-01', '2025-04-01', 'Active'),
+(9,  'REG20250009', 'NY-1023I', 'New York', '2020-06-01', '2022-06-01', 'Expired'),
+(10, 'REG20250010', 'MN-5609J', 'Minnesota', '2023-05-22', '2025-05-22', 'Active'),
+(11, 'REG20250011', 'NV-3917K', 'Nevada', '2024-04-01', '2026-04-01', 'Active'),
+(12, 'REG20250012', 'CO-8491L', 'Colorado', '2024-03-15', '2026-03-15', 'Active'),
+(13, 'REG20250013', 'OR-9283M', 'Oregon', '2023-09-10', '2025-09-10', 'Active'),
+(14, 'REG20250014', 'AZ-5560N', 'Arizona', '2023-07-01', '2025-07-01', 'Active'),
+(15, 'REG20250015', 'MI-3249O', 'Michigan', '2021-03-01', '2023-03-01', 'Expired'),
+(16, 'REG20250016', 'MN-6785P', 'Minnesota', '2024-06-10', '2026-06-10', 'Active'),
+(17, 'REG20250017', 'CA-9912Q', 'California', '2024-05-15', '2026-05-15', 'Active'),
+(18, 'REG20250018', 'OH-4723R', 'Ohio', '2023-10-01', '2025-10-01', 'Active'),
+(19, 'REG20250019', 'CO-2385S', 'Colorado', '2024-01-01', '2026-01-01', 'Active'),
+(20, 'REG20250020', 'TX-7261T', 'Texas', '2023-03-22', '2025-03-22', 'Active'),
+(21, 'REG20250021', 'FL-9023U', 'Florida', '2023-06-01', '2025-06-01', 'Active'),
+(22, 'REG20250022', 'CA-4172V', 'California', '2024-02-14', '2026-02-14', 'Active'),
+(23, 'REG20250023', 'MN-8735W', 'Minnesota', '2023-11-09', '2025-11-09', 'Active'),
+(24, 'REG20250024', 'WA-5128X', 'Washington', '2023-08-20', '2025-08-20', 'Active'),
+(25, 'REG20250025', 'TX-1937Y', 'Texas', '2024-04-01', '2026-04-01', 'Active'),
+(26, 'REG20250026', 'FL-6245Z', 'Florida', '2023-05-05', '2025-05-05', 'Active'),
+(27, 'REG20250027', 'CO-4218A', 'Colorado', '2023-03-30', '2025-03-30', 'Active'),
+(28, 'REG20250028', 'NY-7591B', 'New York', '2024-01-15', '2026-01-15', 'Active'),
+(29, 'REG20250029', 'CA-8350C', 'California', '2022-02-01', '2024-02-01', 'Expired'),
+(30, 'REG20250030', 'MN-9365D', 'Minnesota', '2024-03-10', '2026-03-10', 'Active');
 GO
 
 --------------------------------------------------------
--- Create Inspection Table
+--  Revised Vehicle.Inspection Table
 --------------------------------------------------------
 CREATE TABLE Vehicle.Inspection (
     inspection_id INT IDENTITY(1,1) PRIMARY KEY,
     employee_id INT NOT NULL,
-    vehicle_vin VARCHAR(17) NOT NULL,
-    rental_id INT NULL,  -- Uncomment when Rental.Rental is available
+    vehicle_id INT NOT NULL,
+    rental_id INT NULL,  -- linked to Rental.Rental once data available
     inspection_date DATETIME NOT NULL,
-    inspection_type VARCHAR(4) NOT NULL,  -- 'Pre' or 'Post'
+    inspection_type VARCHAR(4) NOT NULL CHECK (inspection_type IN ('Pre','Post')),
     inspection_mileage DECIMAL(10,2) NOT NULL,
-    fuel_level DECIMAL(5,2) NULL,
-    inspection_media_path VARCHAR(100) NULL,
-    inspection_status VARCHAR(30) NOT NULL,
+    fuel_level DECIMAL(5,2) NULL,  -- as percentage 0–100
+    inspection_media_path VARCHAR(200) NULL,
+    inspection_status VARCHAR(30) NOT NULL CHECK (inspection_status IN ('Passed','Failed','Needs Review')),
     inspection_signoff BIT NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL DEFAULT GETDATE(),
     updated_at DATETIME NULL,
 
-    CONSTRAINT FK_Inspection_Vehicle FOREIGN KEY (vehicle_vin) REFERENCES Vehicle.Vehicle(vehicle_vin),
-    CONSTRAINT FK_Inspection_Employee FOREIGN KEY (employee_id) REFERENCES Operation.Employee(employee_id),
+    CONSTRAINT FK_Inspection_Vehicle FOREIGN KEY (vehicle_id)
+        REFERENCES Vehicle.Vehicle(vehicle_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
 
-    CONSTRAINT CK_Inspection_Type CHECK (inspection_type IN ('Pre','Post'))
+    CONSTRAINT FK_Inspection_Employee FOREIGN KEY (employee_id)
+        REFERENCES Operation.Employee(employee_id)
+        ON DELETE NO ACTION ON UPDATE CASCADE
 );
 GO
 
+
 --------------------------------------------------------
 -- Insert Sample Data into Vehicle.Inspection
+-- Matches Vehicle.Vehicle (1–30)
 --------------------------------------------------------
 INSERT INTO Vehicle.Inspection
-(employee_id, vehicle_vin, rental_id, inspection_date, inspection_type, inspection_mileage, 
- fuel_level, inspection_media_path, inspection_status, inspection_signoff)
+(employee_id, vehicle_id, rental_id, inspection_date, inspection_type, 
+ inspection_mileage, fuel_level, inspection_media_path, inspection_status, inspection_signoff)
 VALUES
-(2,  'VIN0001A123456789', NULL, '2025-03-01 09:00', 'Pre', 15400, 95.0, '/media/inspections/pre_camry_001.jpg', 'Passed', 1),
-(3,  'VIN0001A123456789', 1,    '2025-03-05 17:30', 'Post', 15510, 60.0, '/media/inspections/post_camry_001.jpg', 'Passed', 1),
-(4,  'VIN0002B123456781', NULL, '2025-04-10 08:45', 'Pre', 8200, 85.0, '/media/inspections/pre_crv_002.jpg', 'Passed', 1),
-(5,  'VIN0003C123456782', 3,    '2025-04-13 18:20', 'Post', 24800, 50.0, '/media/inspections/post_f150_003.jpg', 'Requires Maintenance', 0),
-(6,  'VIN0004D123456783', NULL, '2025-02-22 09:30', 'Pre', 17300, 90.0, '/media/inspections/pre_tahoe_004.jpg', 'Passed', 1),
-(7,  'VIN0005E123456784', NULL, '2025-03-02 08:15', 'Pre', 26500, 80.0, '/media/inspections/pre_elantra_005.jpg', 'Passed', 1),
-(8,  'VIN0005E123456784', 5,    '2025-03-07 17:45', 'Post', 26700, 40.0, '/media/inspections/post_elantra_005.jpg', 'Passed', 1),
-(9,  'VIN0006F123456785', NULL, '2025-04-01 09:10', 'Pre', 11000, 98.0, '/media/inspections/pre_tesla_006.jpg', 'Passed', 1),
-(10, 'VIN0007G123456786', NULL, '2025-03-05 08:40', 'Pre', 28000, 75.0, '/media/inspections/pre_leaf_007.jpg', 'Passed', 1),
-(11, 'VIN0008H123456787', NULL, '2025-02-20 09:00', 'Pre', 39000, 88.0, '/media/inspections/pre_corolla_008.jpg', 'Failed', 0),
-(12, 'VIN0008H123456787', 10,   '2025-02-25 18:15', 'Post', 39120, 50.0, '/media/inspections/post_corolla_008.jpg', 'Passed', 1),
-(13, 'VIN0009I123456788', NULL, '2025-03-03 08:55', 'Pre', 8900, 97.0, '/media/inspections/pre_sorento_009.jpg', 'Passed', 1),
-(14, 'VIN0010J123456789', NULL, '2025-03-08 09:05', 'Pre', 14400, 90.0, '/media/inspections/pre_escape_010.jpg', 'Passed', 1),
-(15, 'VIN0011K123456780', NULL, '2025-03-10 08:50', 'Pre', 9600, 95.0, '/media/inspections/pre_tucson_011.jpg', 'Passed', 1),
-(16, 'VIN0012L123456781', NULL, '2025-03-12 09:10', 'Pre', 15300, 92.0, '/media/inspections/pre_civic_012.jpg', 'Passed', 1);
+(5,  1,  NULL, '2025-10-10 09:00', 'Pre', 43210.25, 95.00, 'photos/inspection_1_pre.jpg', 'Passed', 1),
+(7,  2,  NULL, '2025-10-12 10:15', 'Pre', 38150.88, 90.00, 'photos/inspection_2_pre.jpg', 'Passed', 1),
+(9,  3,  NULL, '2025-10-14 11:45', 'Pre', 50210.00, 85.00, 'photos/inspection_3_pre.jpg', 'Needs Review', 0),
+(11, 4,  NULL, '2025-10-16 09:30', 'Pre', 27450.76, 88.00, 'photos/inspection_4_pre.jpg', 'Passed', 1),
+(12, 5,  NULL, '2025-10-18 14:00', 'Pre', 36190.00, 92.00, 'photos/inspection_5_pre.jpg', 'Passed', 1),
+(15, 6,  NULL, '2025-10-20 10:00', 'Pre', 21120.59, 89.00, 'photos/inspection_6_pre.jpg', 'Passed', 1),
+(17, 7,  NULL, '2025-10-22 13:15', 'Pre', 44230.17, 87.00, 'photos/inspection_7_pre.jpg', 'Passed', 1),
+(20, 8,  NULL, '2025-10-24 08:45', 'Pre', 15230.00, 99.00, 'photos/inspection_8_pre.jpg', 'Passed', 1),
+(22, 9,  NULL, '2025-10-25 09:00', 'Pre', 61200.90, 80.00, 'photos/inspection_9_pre.jpg', 'Needs Review', 0),
+(24, 10, NULL, '2025-10-26 15:30', 'Pre', 27310.44, 91.00, 'photos/inspection_10_pre.jpg', 'Passed', 1),
+(26, 11, NULL, '2025-10-28 16:00', 'Pre', 41290.20, 93.00, 'photos/inspection_11_pre.jpg', 'Passed', 1),
+(28, 12, NULL, '2025-10-30 08:20', 'Pre', 30122.70, 90.00, 'photos/inspection_12_pre.jpg', 'Passed', 1),
+(30, 13, NULL, '2025-11-01 10:10', 'Pre', 18300.10, 97.00, 'photos/inspection_13_pre.jpg', 'Passed', 1),
+(33, 14, NULL, '2025-11-02 09:45', 'Pre', 20980.40, 94.00, 'photos/inspection_14_pre.jpg', 'Passed', 1),
+(36, 15, NULL, '2025-11-03 11:20', 'Pre', 47210.35, 82.00, 'photos/inspection_15_pre.jpg', 'Needs Review', 0),
+
+-- Post-Inspection Records
+(5,  1,  1, '2025-12-12 16:30', 'Post', 43280.25, 65.00, 'photos/inspection_1_post.jpg', 'Passed', 1),
+(7,  2,  2, '2025-12-18 17:00', 'Post', 38210.88, 60.00, 'photos/inspection_2_post.jpg', 'Passed', 1),
+(9,  3,  3, '2025-12-21 18:00', 'Post', 50280.00, 72.00, 'photos/inspection_3_post.jpg', 'Passed', 1),
+(11, 4,  4, '2026-01-01 13:45', 'Post', 27550.76, 80.00, 'photos/inspection_4_post.jpg', 'Passed', 1),
+(12, 5,  5, '2026-01-05 15:00', 'Post', 36250.00, 77.00, 'photos/inspection_5_post.jpg', 'Passed', 1),
+(15, 6,  6, '2026-01-08 10:30', 'Post', 21210.59, 88.00, 'photos/inspection_6_post.jpg', 'Passed', 1),
+(17, 7,  7, '2026-01-19 11:00', 'Post', 44310.17, 70.00, 'photos/inspection_7_post.jpg', 'Needs Review', 0),
+(20, 8,  NULL, '2025-11-05 14:00', 'Post', 15320.00, 94.00, 'photos/inspection_8_post.jpg', 'Passed', 1),
+(22, 9,  NULL, '2025-11-06 15:00', 'Post', 61300.90, 78.00, 'photos/inspection_9_post.jpg', 'Failed', 0),
+(24, 10, NULL, '2025-11-07 09:00', 'Post', 27410.44, 88.00, 'photos/inspection_10_post.jpg', 'Passed', 1),
+(26, 11, NULL, '2025-11-08 10:00', 'Post', 41390.20, 82.00, 'photos/inspection_11_post.jpg', 'Passed', 1),
+(28, 12, NULL, '2025-11-09 12:30', 'Post', 30210.70, 91.00, 'photos/inspection_12_post.jpg', 'Passed', 1),
+(30, 13, NULL, '2025-11-10 09:30', 'Post', 18410.10, 95.00, 'photos/inspection_13_post.jpg', 'Passed', 1),
+(33, 14, NULL, '2025-11-11 11:00', 'Post', 21050.40, 93.00, 'photos/inspection_14_post.jpg', 'Passed', 1),
+(36, 15, NULL, '2025-11-12 13:00', 'Post', 47330.35, 89.00, 'photos/inspection_15_post.jpg', 'Passed', 1);
 GO
 
 --------------------------------------------------------
--- Create Vehicle.Damage Table
+-- ✅ Verified Vehicle.Damage Table
 --------------------------------------------------------
 CREATE TABLE Vehicle.Damage (
     damage_id INT IDENTITY(1,1) PRIMARY KEY,
     inspection_id INT NOT NULL,
     damage_description VARCHAR(200) NOT NULL,
-    estimated_repair_cost DECIMAL(10,2) NULL,          -- optional for future finance tracking
+    estimated_repair_cost DECIMAL(10,2) NULL,
     damage_severity VARCHAR(20) NULL CHECK (damage_severity IN ('Minor','Moderate','Severe')),
-    damage_status VARCHAR(20) NOT NULL DEFAULT 'Unresolved' 
+    damage_status VARCHAR(20) NOT NULL DEFAULT 'Unresolved'
         CHECK (damage_status IN ('Unresolved','Under Repair','Resolved')),
     reported_date DATETIME NOT NULL DEFAULT GETDATE(),
 
     CONSTRAINT FK_Damage_Inspection 
-        FOREIGN KEY (inspection_id) 
+        FOREIGN KEY (inspection_id)
         REFERENCES Vehicle.Inspection(inspection_id)
-        ON DELETE CASCADE ON UPDATE CASCADE
+        ON DELETE CASCADE 
+        ON UPDATE CASCADE
 );
 GO
 
 --------------------------------------------------------
 -- Insert Sample Data into Vehicle.Damage
+-- Links to Vehicle.Inspection(inspection_id)
 --------------------------------------------------------
 INSERT INTO Vehicle.Damage
 (inspection_id, damage_description, estimated_repair_cost, damage_severity, damage_status)
 VALUES
-(4, 'Rear bumper scratch and dent detected after rental.', 350.00, 'Minor', 'Under Repair'),
-(5, 'Left side mirror broken, likely collision impact.', 220.00, 'Moderate', 'Unresolved'),
-(7, 'Front windshield cracked at lower corner.', 600.00, 'Moderate', 'Unresolved'),
-(10, 'Engine noise detected — possible belt issue.', 480.00, 'Moderate', 'Under Repair'),
-(11, 'Front tire puncture reported during return.', 120.00, 'Minor', 'Resolved'),
-(12, 'Right door panel scuffed — paint damage.', 200.00, 'Minor', 'Resolved'),
-(13, 'Rear brake lights not working properly.', 180.00, 'Minor', 'Under Repair'),
-(14, 'AC system malfunction reported during inspection.', 750.00, 'Moderate', 'Unresolved'),
-(15, 'Minor dent on trunk door.', 150.00, 'Minor', 'Resolved'),
-(6, 'Front bumper alignment slightly off.', 300.00, 'Minor', 'Under Repair'),
-(8, 'Battery corrosion observed — cleaning required.', 80.00, 'Minor', 'Resolved'),
-(9, 'Left headlight moisture inside cover.', 130.00, 'Minor', 'Unresolved');
+(3,  'Rear bumper scuff marks observed near license area', 185.00, 'Minor', 'Resolved'),
+(9,  'Front bumper dent and left headlight cracked', 750.00, 'Moderate', 'Under Repair'),
+(15, 'Deep scratch on passenger side door', 320.00, 'Minor', 'Resolved'),
+(17, 'Left mirror broken after return inspection', 240.00, 'Minor', 'Unresolved'),
+(19, 'Small chip in windshield lower right corner', 130.00, 'Minor', 'Resolved'),
+(22, 'Rear right tire worn beyond limit', 180.00, 'Moderate', 'Under Repair'),
+(23, 'Roof dent — likely due to falling branch', 950.00, 'Moderate', 'Under Repair'),
+(25, 'Front fender bent; requires replacement', 1200.00, 'Severe', 'Unresolved'),
+(26, 'Interior spill stain on seat fabric', 75.00, 'Minor', 'Resolved'),
+(27, 'Scratches on rear trunk area, repaint needed', 400.00, 'Moderate', 'Resolved'),
+(29, 'Rear windshield cracked during transit', 650.00, 'Moderate', 'Under Repair'),
+(30, 'Front tire puncture — replaced immediately', 160.00, 'Minor', 'Resolved');
 GO
 
 --------------------------------------------------------
--- Create Vehicle.Maintenance_Record Table 
+-- ✅ Create Vehicle.Maintenance_Record Table
 --------------------------------------------------------
 CREATE TABLE Vehicle.Maintenance_Record (
     maintenance_id INT IDENTITY(1,1) PRIMARY KEY,
-    vehicle_vin VARCHAR(17) NOT NULL,
+    vehicle_id INT NOT NULL,
     service_provider VARCHAR(50) NOT NULL,
     maintenance_date DATE NOT NULL,
     maintenance_type VARCHAR(30) NOT NULL CHECK (maintenance_type IN 
-        ('Oil Change','Tire Rotation','Brake Service','Battery Replacement','General Inspection','Transmission Service','Detailing','Other')),
+        ('Oil Change','Tire Rotation','Brake Service','Battery Replacement',
+         'General Inspection','Transmission Service','Detailing','Other')),
     maintenance_cost DECIMAL(10,2) NOT NULL CHECK (maintenance_cost >= 0),
     mileage_at_maintenance DECIMAL(10,2) NULL CHECK (mileage_at_maintenance >= 0),
     next_due_date DATE NULL,
-    maintenance_status VARCHAR(20) NOT NULL DEFAULT 'Completed' CHECK (maintenance_status IN ('Completed','Scheduled','Pending')),
+    maintenance_status VARCHAR(20) NOT NULL DEFAULT 'Completed' 
+        CHECK (maintenance_status IN ('Completed','Scheduled','Pending')),
     created_at DATETIME NOT NULL DEFAULT GETDATE(),
     updated_at DATETIME NULL,
 
     CONSTRAINT FK_Maintenance_Vehicle 
-        FOREIGN KEY (vehicle_vin) 
-        REFERENCES Vehicle.Vehicle(vehicle_vin)
+        FOREIGN KEY (vehicle_id) 
+        REFERENCES Vehicle.Vehicle(vehicle_id)
         ON DELETE CASCADE ON UPDATE CASCADE,
 
     CONSTRAINT CK_Maintenance_DueDate CHECK (
@@ -1564,28 +2162,29 @@ GO
 -- Insert Sample Data into Vehicle.Maintenance_Record
 --------------------------------------------------------
 INSERT INTO Vehicle.Maintenance_Record
-(vehicle_vin, service_provider, maintenance_date, maintenance_type, maintenance_cost,
+(vehicle_id, service_provider, maintenance_date, maintenance_type, maintenance_cost,
  mileage_at_maintenance, next_due_date, maintenance_status)
 VALUES
-('VIN0001A123456789', 'Goodyear Auto Service', '2025-02-15', 'Oil Change', 89.99, 15400, '2025-08-15', 'Completed'),
-('VIN0002B123456781', 'Jiffy Lube', '2025-01-20', 'Brake Service', 240.00, 8100, '2026-01-20', 'Completed'),
-('VIN0003C123456782', 'Midas Auto Repair', '2025-03-10', 'Tire Rotation', 75.00, 24800, '2025-09-10', 'Completed'),
-('VIN0004D123456783', 'Valvoline Express', '2025-04-05', 'Oil Change', 95.50, 17300, '2025-10-05', 'Completed'),
-('VIN0005E123456784', 'Firestone Complete Auto Care', '2025-02-02', 'Battery Replacement', 180.00, 26500, '2027-02-02', 'Completed'),
-('VIN0006F123456785', 'Tesla Service Center', '2025-03-22', 'General Inspection', 120.00, 11000, '2026-03-22', 'Completed'),
-('VIN0007G123456786', 'Nissan Certified Service', '2025-01-30', 'Brake Service', 310.00, 28000, '2026-01-30', 'Completed'),
-('VIN0008H123456787', 'Toyota Care Center', '2025-04-01', 'Oil Change', 89.00, 39120, '2025-10-01', 'Completed'),
-('VIN0009I123456788', 'Kia Dealership', '2025-03-28', 'Transmission Service', 450.00, 8900, '2026-03-28', 'Completed'),
-('VIN0010J123456789', 'Ford Auto Center', '2025-03-07', 'Brake Service', 295.00, 14400, '2026-03-07', 'Completed'),
-('VIN0011K123456780', 'Hyundai AutoCare', '2025-02-15', 'Tire Rotation', 85.00, 9600, '2025-08-15', 'Scheduled'),
-('VIN0012L123456781', 'Honda Auto Service', '2025-04-12', 'General Inspection', 99.00, 15300, '2026-04-12', 'Completed'),
-('VIN0013M123456782', 'Chevrolet Maintenance', '2025-03-02', 'Brake Service', 310.00, 27800, '2026-03-02', 'Completed'),
-('VIN0014N123456783', 'Tesla Service Center', '2025-04-10', 'Battery Replacement', 500.00, 6500, '2028-04-10', 'Completed'),
-('VIN0015O123456784', 'Mazda Auto Center', '2025-03-18', 'Oil Change', 95.00, 9900, '2025-09-18', 'Completed');
+(1,  'Goodyear Auto Service',        '2025-02-15', 'Oil Change',          89.99, 43210, '2025-08-15', 'Completed'),
+(2,  'Jiffy Lube',                   '2025-01-20', 'Brake Service',       240.00, 38150, '2026-01-20', 'Completed'),
+(3,  'Midas Auto Repair',            '2025-03-10', 'Tire Rotation',       75.00, 50210, '2025-09-10', 'Completed'),
+(4,  'Valvoline Express',            '2025-04-05', 'Oil Change',          95.50, 27450, '2025-10-05', 'Completed'),
+(5,  'Firestone Complete Auto Care', '2025-02-02', 'Battery Replacement', 180.00, 36190, '2027-02-02', 'Completed'),
+(6,  'Tesla Service Center',         '2025-03-22', 'General Inspection',  120.00, 21120, '2026-03-22', 'Completed'),
+(7,  'Nissan Certified Service',     '2025-01-30', 'Brake Service',       310.00, 44230, '2026-01-30', 'Completed'),
+(8,  'Toyota Care Center',           '2025-04-01', 'Oil Change',          89.00, 15230, '2025-10-01', 'Completed'),
+(9,  'Kia Dealership',               '2025-03-28', 'Transmission Service',450.00, 61200, '2026-03-28', 'Completed'),
+(10, 'Ford Auto Center',             '2025-03-07', 'Brake Service',       295.00, 27310, '2026-03-07', 'Completed'),
+(11, 'Hyundai AutoCare',             '2025-02-15', 'Tire Rotation',       85.00, 41290, '2025-08-15', 'Scheduled'),
+(12, 'Honda Auto Service',           '2025-04-12', 'General Inspection',  99.00, 30122, '2026-04-12', 'Completed'),
+(13, 'Chevrolet Maintenance',        '2025-03-02', 'Brake Service',       310.00, 18300, '2026-03-02', 'Completed'),
+(14, 'Tesla Service Center',         '2025-04-10', 'Battery Replacement', 500.00, 20980, '2028-04-10', 'Completed'),
+(15, 'Mazda Auto Center',            '2025-03-18', 'Oil Change',          95.00, 47210, '2025-09-18', 'Completed');
 GO
 
 --------------------------------------------------------
--- Create Vehicle.Maintenance_Inspection Table
+-- ✅ Fixed Vehicle.Maintenance_Inspection Table
+-- (Prevents multiple cascade paths)
 --------------------------------------------------------
 CREATE TABLE Vehicle.Maintenance_Inspection (
     maintenance_id INT NOT NULL,
@@ -1602,12 +2201,14 @@ CREATE TABLE Vehicle.Maintenance_Inspection (
     CONSTRAINT FK_MI_Maintenance 
         FOREIGN KEY (maintenance_id) 
         REFERENCES Vehicle.Maintenance_Record(maintenance_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
+        ON DELETE CASCADE 
+        ON UPDATE CASCADE,
 
     CONSTRAINT FK_MI_Inspection 
         FOREIGN KEY (inspection_id) 
         REFERENCES Vehicle.Inspection(inspection_id)
-        ON DELETE CASCADE ON UPDATE CASCADE
+        ON DELETE NO ACTION     -- ✅ prevent multiple cascade paths
+        ON UPDATE NO ACTION
 );
 GO
 
@@ -1617,24 +2218,24 @@ GO
 INSERT INTO Vehicle.Maintenance_Inspection
 (maintenance_id, inspection_id, request_date, request_type, description, priority_level, status)
 VALUES
-(1, 4,  '2025-03-12', 'Damage Follow-up', 'Follow-up on bumper dent noted during post-rental inspection.', 'Medium', 'In Progress'),
-(2, 5,  '2025-03-18', 'Repair Request', 'Replace broken side mirror and recalibrate sensors.', 'High', 'Pending'),
-(3, 7,  '2025-03-25', 'Preventive Check', 'Inspect brakes before customer rental.', 'Low', 'Completed'),
-(4, 10, '2025-04-01', 'Repair Request', 'Investigate engine noise reported in inspection.', 'High', 'In Progress'),
-(5, 11, '2025-04-02', 'Routine Service', 'Scheduled maintenance per 25,000 mile interval.', 'Medium', 'Completed'),
-(6, 12, '2025-04-05', 'Damage Follow-up', 'Repaint right door panel scratches.', 'Low', 'Pending'),
-(7, 13, '2025-04-06', 'Preventive Check', 'General systems check post-maintenance.', 'Low', 'Completed'),
-(8, 14, '2025-04-07', 'Repair Request', 'AC system not cooling effectively.', 'High', 'In Progress'),
-(9, 15, '2025-04-08', 'Preventive Check', 'Inspect tire tread and pressure before next booking.', 'Medium', 'Completed'),
-(10, 6, '2025-04-09', 'Routine Service', 'Periodic maintenance scheduling for hybrid battery.', 'Medium', 'Pending');
+(1,  4,  '2025-03-12', 'Damage Follow-up', 'Follow-up on bumper dent noted during post-rental inspection.', 'Medium', 'In Progress'),
+(2,  5,  '2025-03-18', 'Repair Request',    'Replace broken side mirror and recalibrate sensors.',          'High',   'Pending'),
+(3,  7,  '2025-03-25', 'Preventive Check',  'Inspect brakes before customer rental.',                       'Low',    'Completed'),
+(4,  10, '2025-04-01', 'Repair Request',    'Investigate engine noise reported in inspection.',              'High',   'In Progress'),
+(5,  11, '2025-04-02', 'Routine Service',   'Scheduled maintenance per 25,000 mile interval.',              'Medium', 'Completed'),
+(6,  12, '2025-04-05', 'Damage Follow-up',  'Repaint right door panel scratches.',                           'Low',    'Pending'),
+(7,  13, '2025-04-06', 'Preventive Check',  'General systems check post-maintenance.',                       'Low',    'Completed'),
+(8,  14, '2025-04-07', 'Repair Request',    'AC system not cooling effectively.',                             'High',   'In Progress'),
+(9,  15, '2025-04-08', 'Preventive Check',  'Inspect tire tread and pressure before next booking.',          'Medium', 'Completed'),
+(10, 6,  '2025-04-09', 'Routine Service',   'Periodic maintenance scheduling for hybrid battery.',           'Medium', 'Pending');
 GO
 
 --------------------------------------------------------
--- Create Vehicle.Vehicle_Insurance Table
+-- ✅ Create Vehicle.Vehicle_Insurance Table
 --------------------------------------------------------
 CREATE TABLE Vehicle.Vehicle_Insurance (
     insurance_id INT IDENTITY(1,1) PRIMARY KEY,
-    vehicle_vin VARCHAR(17) NOT NULL,
+    vehicle_id INT NOT NULL,
     policy_number VARCHAR(20) NOT NULL UNIQUE,
     provider_name VARCHAR(50) NOT NULL,
     coverage_type VARCHAR(30) NOT NULL CHECK (coverage_type IN 
@@ -1647,7 +2248,8 @@ CREATE TABLE Vehicle.Vehicle_Insurance (
     updated_at DATETIME NULL,
 
     CONSTRAINT FK_VehicleInsurance_Vehicle 
-        FOREIGN KEY (vehicle_vin) REFERENCES Vehicle.Vehicle(vehicle_vin)
+        FOREIGN KEY (vehicle_id) 
+        REFERENCES Vehicle.Vehicle(vehicle_id)
         ON DELETE CASCADE ON UPDATE CASCADE,
 
     CONSTRAINT CK_Policy_Expiry 
@@ -1659,24 +2261,24 @@ GO
 -- Insert Sample Data into Vehicle.Vehicle_Insurance
 --------------------------------------------------------
 INSERT INTO Vehicle.Vehicle_Insurance
-(vehicle_vin, policy_number, provider_name, coverage_type, 
+(vehicle_id, policy_number, provider_name, coverage_type, 
  policy_start_date, policy_expiry_date, policy_status)
 VALUES
-('VIN0001A123456789', 'POL2022MN001', 'State Farm Insurance', 'Full Coverage', '2024-01-10', '2025-01-10', 'Active'),
-('VIN0002B123456781', 'POL2023CA002', 'GEICO', 'Comprehensive', '2024-03-15', '2025-03-15', 'Active'),
-('VIN0003C123456782', 'POL2021TX003', 'Allstate', 'Collision', '2023-06-01', '2024-06-01', 'Expired'),
-('VIN0004D123456783', 'POL2022NY004', 'Progressive', 'Full Coverage', '2024-08-20', '2025-08-20', 'Active'),
-('VIN0005E123456784', 'POL2021FL005', 'Liberty Mutual', 'Liability', '2023-12-05', '2024-12-05', 'Pending Renewal'),
-('VIN0006F123456785', 'POL2020NV006', 'Nationwide', 'Comprehensive', '2023-02-10', '2024-02-10', 'Expired'),
-('VIN0007G123456786', 'POL2021WA007', 'Travelers Insurance', 'Full Coverage', '2024-09-12', '2025-09-12', 'Active'),
-('VIN0008H123456787', 'POL2020IL008', 'USAA', 'Collision', '2023-05-01', '2024-05-01', 'Expired'),
-('VIN0009I123456788', 'POL2023AZ009', 'Farmers Insurance', 'Comprehensive', '2024-04-01', '2025-04-01', 'Active'),
-('VIN0010J123456789', 'POL2022OH010', 'Erie Insurance', 'Full Coverage', '2024-07-07', '2025-07-07', 'Active'),
-('VIN0011K123456780', 'POL2021CO011', 'Nationwide', 'Liability', '2023-03-22', '2024-03-22', 'Expired'),
-('VIN0012L123456781', 'POL2022GA012', 'State Farm Insurance', 'Personal Injury', '2024-10-10', '2025-10-10', 'Active'),
-('VIN0013M123456782', 'POL2020MI013', 'Progressive', 'Collision', '2023-12-12', '2024-12-12', 'Active'),
-('VIN0014N123456783', 'POL2021UT014', 'Allstate', 'Comprehensive', '2024-02-18', '2025-02-18', 'Active'),
-('VIN0015O123456784', 'POL2023WI015', 'GEICO', 'Full Coverage', '2024-05-10', '2025-05-10', 'Active');
+(1,  'POL2022MN001', 'State Farm Insurance', 'Full Coverage',   '2024-01-10', '2025-01-10', 'Active'),
+(2,  'POL2023CA002', 'GEICO',                'Comprehensive',   '2024-03-15', '2025-03-15', 'Active'),
+(3,  'POL2021TX003', 'Allstate',             'Collision',       '2023-06-01', '2024-06-01', 'Expired'),
+(4,  'POL2022NY004', 'Progressive',          'Full Coverage',   '2024-08-20', '2025-08-20', 'Active'),
+(5,  'POL2021FL005', 'Liberty Mutual',       'Liability',       '2023-12-05', '2024-12-05', 'Pending Renewal'),
+(6,  'POL2020NV006', 'Nationwide',           'Comprehensive',   '2023-02-10', '2024-02-10', 'Expired'),
+(7,  'POL2021WA007', 'Travelers Insurance',  'Full Coverage',   '2024-09-12', '2025-09-12', 'Active'),
+(8,  'POL2020IL008', 'USAA',                 'Collision',       '2023-05-01', '2024-05-01', 'Expired'),
+(9,  'POL2023AZ009', 'Farmers Insurance',    'Comprehensive',   '2024-04-01', '2025-04-01', 'Active'),
+(10, 'POL2022OH010', 'Erie Insurance',       'Full Coverage',   '2024-07-07', '2025-07-07', 'Active'),
+(11, 'POL2021CO011', 'Nationwide',           'Liability',       '2023-03-22', '2024-03-22', 'Expired'),
+(12, 'POL2022GA012', 'State Farm Insurance', 'Personal Injury', '2024-10-10', '2025-10-10', 'Active'),
+(13, 'POL2020MI013', 'Progressive',          'Collision',       '2023-12-12', '2024-12-12', 'Active'),
+(14, 'POL2021UT014', 'Allstate',             'Comprehensive',   '2024-02-18', '2025-02-18', 'Active'),
+(15, 'POL2023WI015', 'GEICO',                'Full Coverage',   '2024-05-10', '2025-05-10', 'Active');
 GO
 
 --------------------------------------------------------
@@ -2011,4 +2613,3 @@ VALUES
 (14, '330 Forest St', 'Unit 4C', 'Madison', 'WI', '53703', 'USA'),
 (15, '650 North St', NULL, 'Rochester', 'MN', '55901', 'USA');
 GO
-
