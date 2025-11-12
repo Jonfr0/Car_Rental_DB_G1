@@ -1,4 +1,5 @@
---UDF
+--scalar UDF
+
 --Purpose: Calculates the total number of days a customer has rented vehicles in our car rental system
 --This function helps provide insight into a customers usage patterns by tracking how long they have rented vehicles in total. 
 IF OBJECT_ID(N'dbo.fn_GetCustomerTotalRentalDays', N'FN') IS NOT NULL
