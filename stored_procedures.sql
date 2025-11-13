@@ -4,49 +4,38 @@
 -- Purpose: It makes it easier to view customer history by pulling all the important transaction data in just one request. 
 -- This helps keep the data consistent and reduces mistakes or differences that can happen when running several manual queries or using extra logic in the app.
 
-IF OBJECT_ID('dbo.sp_GetCustomerRentalHistory') IS NOT NULL
-DROP PROCEDURE dbo.sp_GetCustomerRentalHistory
+IF OBJECT_ID('dbo.usp_GetCustomerRentalHistory') IS NOT NULL
+    DROP PROCEDURE dbo.usp_GetCustomerRentalHistory;
 GO
-CREATE PROCEDURE dbo.sp_GetCustomerRentalHistory @CustomerID INT
+
+CREATE PROCEDURE dbo.usp_GetCustomerRentalHistory
+    @CustomerID INT
 AS
 BEGIN
     SET NOCOUNT ON;
 
     SELECT
         r.rental_id,
+        r.reservation_id,
         r.rental_start,
         r.rental_end,
-        r.rental_total,
         r.rental_status,
+        r.rental_total,
+        r.security_deposit,
         v.make,
         v.model,
-        v.year
-    FROM Rental.Rental r
-    JOIN Vehicle.Vehicle v ON r.vehicle_vin = v.vehicle_vin
-    WHERE r.customer_id = @CustomerID;
-
-    SELECT
-        p.payment_id,
-        p.payment_date,
-        p.payment_amount,
-        p.payment_status,
-        p.reference_number
-    FROM Finance.Rental_Payment p
-    JOIN Rental.Rental r ON p.rental_id = r.rental_id
-    WHERE r.customer_id = @CustomerID;
-
-    SELECT
-        rf.refund_id,
-        rf.refund_date,
-        rf.refund_amount,
-        rf.refund_reason,
-        rf.refund_status
-    FROM Finance.Refund rf
-    JOIN Finance.Rental_Payment p ON rf.payment_id = p.payment_id
-    JOIN Rental.Rental r ON p.rental_id = r.rental_id
-    WHERE r.customer_id = @CustomerID;
+        v.year,
+        v.color,
+        v.mileage
+    FROM Rental.Rental AS r
+    JOIN Vehicle.Vehicle AS v
+        ON r.vehicle_vin = v.vehicle_vin
+    WHERE r.customer_id = @CustomerID
+    ORDER BY r.rental_start DESC;
 END;
-
-EXEC dbo.sp_GetCustomerRentalHistory @CustomerID = 15
 GO
+
+-- Test Example
+EXEC dbo.usp_GetCustomerRentalHistory @CustomerID = 15;
+
 
