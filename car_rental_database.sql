@@ -1,4 +1,4 @@
-USE CarRent;
+USE CarRentalDB;
 GO
 
 -- Create Schemas. We are not dropping any schemas or tables
@@ -485,7 +485,7 @@ CREATE TABLE Finance.Rental_Estimate (
         (base_rate + ISNULL(surcharge_total,0) - ISNULL(discount_total,0) + ISNULL(tax_total,0)) PERSISTED,
 
     created_at DATETIME NOT NULL DEFAULT GETDATE(),
-
+    updated_at DATETIME NULL,
     --------------------------------------------------------
     -- Foreign Key Constraints
     --------------------------------------------------------
@@ -660,10 +660,6 @@ GO
 
 --------------------------------------------------------
 -- Stored Procedure: Assign Tax Rates to All Branches
--- Author: Pawan Oli
--- Purpose:
---   Auto-populates Finance.Tax_Rate with standard tax rates
---   based on tax type and branch name (airport logic included)
 --------------------------------------------------------
 CREATE OR ALTER PROCEDURE Finance.usp_Assign_Taxes_To_Branches
 AS
@@ -983,10 +979,8 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- For every reservation that got a new add-on (handles bulk/row inserts)
     DECLARE @reservation_id INT;
 
-    -- Use a cursor for multiple inserted rows (if batch-inserted)
     DECLARE inserted_cursor CURSOR FOR
         SELECT DISTINCT reservation_id FROM inserted;
 
@@ -995,8 +989,31 @@ BEGIN
 
     WHILE @@FETCH_STATUS = 0
     BEGIN
-        -- Call your stored procedure for each reservation
-        EXEC Finance.usp_CreateRentalEstimate @reservation_id = @reservation_id;
+        DECLARE @estimate_id INT;
+
+        SELECT @estimate_id = estimate_id
+        FROM Finance.Rental_Estimate
+        WHERE reservation_id = @reservation_id;
+
+        IF @estimate_id IS NOT NULL
+        BEGIN
+            -- Only update the components, total_estimate is computed automatically
+            UPDATE Finance.Rental_Estimate
+            SET
+                surcharge_total = (
+                    SELECT COALESCE(SUM(cr.charge_unit_rate * rc.quantity), 0)
+                    FROM Rental.Reservation_Charge rc
+                    JOIN Finance.Charge_Rate cr ON rc.charge_rate_id = cr.charge_rate_id
+                    WHERE rc.reservation_id = @reservation_id
+                ),
+                updated_at = GETDATE()
+            WHERE estimate_id = @estimate_id;
+        END
+        ELSE
+        BEGIN
+            -- If no estimate exists yet, create it
+            EXEC Finance.usp_CreateRentalEstimate @reservation_id = @reservation_id;
+        END
 
         FETCH NEXT FROM inserted_cursor INTO @reservation_id;
     END
@@ -1005,6 +1022,8 @@ BEGIN
     DEALLOCATE inserted_cursor;
 END;
 GO
+
+
 
 ---------------------------
 -- Insert 30 records into Rental.Reservation 
@@ -1221,9 +1240,6 @@ GO
 
 ------------------------------------------------------------
 -- Stored Procedure: usp_FinalizeRental
--- Author: Pawan Oli
--- Purpose: Calculates and updates final rental total
--- Logic: estimate + extra charges + deposit
 ------------------------------------------------------------
 CREATE OR ALTER PROCEDURE Rental.usp_FinalizeRental
     @rental_id INT,
@@ -1232,9 +1248,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    --------------------------------------------------------
     -- Declare variables
-    --------------------------------------------------------
     DECLARE 
         @reservation_id INT,
         @base_estimate DECIMAL(10,2),
@@ -1242,23 +1256,17 @@ BEGIN
         @security_deposit DECIMAL(10,2) = 300.00,
         @final_total DECIMAL(10,2);
 
-    --------------------------------------------------------
-    -- 1️⃣ Get reservation_id for this rental
-    --------------------------------------------------------
+    -- Get reservation_id for this rental
     SELECT @reservation_id = reservation_id
     FROM Rental.Rental
     WHERE rental_id = @rental_id;
 
-    --------------------------------------------------------
-    -- 2️⃣ Get total_estimate from Finance.Rental_Estimate
-    --------------------------------------------------------
+    -- Get total_estimate from Finance.Rental_Estimate
     SELECT @base_estimate = ISNULL(total_estimate, 0)
     FROM Finance.Rental_Estimate
     WHERE reservation_id = @reservation_id;
 
-    --------------------------------------------------------
-    -- 3️⃣ Sum all actual charges for this rental
-    --------------------------------------------------------
+    -- Sum all actual charges for this rental
     SELECT 
         @extra_charges = ISNULL(SUM(cr.charge_unit_rate * d.charge_quantity), 0)
     FROM Finance.Rental_Charge_Detail d
@@ -1266,14 +1274,12 @@ BEGIN
         ON d.charge_rate_id = cr.charge_rate_id
     WHERE d.rental_id = @rental_id;
 
-    --------------------------------------------------------
-    -- 4️⃣ Calculate final total
-    --------------------------------------------------------
+  
+    -- Calculate final total
     SET @final_total = ROUND(@base_estimate + @extra_charges + @security_deposit, 2);
 
-    --------------------------------------------------------
-    -- 5️⃣ Update Rental table with final total and status
-    --------------------------------------------------------
+ 
+    -- Update Rental table with final total and status
     UPDATE Rental.Rental
     SET 
         rental_end = @rental_end,
@@ -1282,9 +1288,7 @@ BEGIN
         updated_at = GETDATE()
     WHERE rental_id = @rental_id;
 
-    --------------------------------------------------------
-    -- 6️⃣ Return summary for verification
-    --------------------------------------------------------
+    -- Return summary for verification
     SELECT 
         @rental_id AS rental_id,
         @reservation_id AS reservation_id,
@@ -1298,9 +1302,6 @@ GO
 
 ------------------------------------------------------------
 -- Trigger: trg_FinalizeRental_AfterStatusChange
--- Purpose: Automatically run usp_FinalizeRental 
---          when rental_status changes to 'Completed'
--- Author: Pawan Oli
 ------------------------------------------------------------
 CREATE OR ALTER TRIGGER Rental.trg_FinalizeRental_AfterStatusChange
 ON Rental.Rental
@@ -1309,9 +1310,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    --------------------------------------------------------
     -- Only run if status is set to 'Completed'
-    --------------------------------------------------------
     IF NOT EXISTS (
         SELECT 1
         FROM inserted i
@@ -1319,9 +1318,7 @@ BEGIN
     )
         RETURN;
 
-    --------------------------------------------------------
     -- Loop through all rows that were updated to Completed
-    --------------------------------------------------------
     DECLARE @rental_id INT, @rental_end DATETIME;
 
     DECLARE cur CURSOR FOR
@@ -1356,9 +1353,9 @@ SET rental_status = 'Completed', rental_end = '2026-01-01 12:30'
 WHERE rental_id = 4;
 
 
-------------------------------------------------------------
+
 -- Complete all active rentals (trigger auto-finalizes totals)
-------------------------------------------------------------
+
 UPDATE Rental.Rental
 SET 
     rental_status = 'Completed',
@@ -1366,9 +1363,9 @@ SET
 WHERE rental_status = 'Active';
 GO
 
-------------------------------------------------------------
--- Example: Add rental-time charges for damaged/lated rentals
-------------------------------------------------------------
+
+-- Add rental-time charges for damaged/lated rentals
+
 INSERT INTO Finance.Rental_Charge_Detail (rental_id, charge_rate_id, charge_quantity)
 VALUES
 (4, 9, 2),  -- Late return (2 hours)
@@ -1376,9 +1373,8 @@ VALUES
 (6, 7, 1);  -- Damage fee
 GO
 
-------------------------------------------------------------
 -- Show total extra charges per rental
-------------------------------------------------------------
+
 SELECT 
     r.rental_id,
     r.reservation_id,
@@ -1478,8 +1474,6 @@ GO
 
 ------------------------------------------------------------
 -- Trigger: Auto-create payment (Credit/Debit) when rental completed
--- Author: Pawan Oli
--- Date: 2025-11-12
 ------------------------------------------------------------
 CREATE OR ALTER TRIGGER Rental.trg_AutoInsert_Payment
 ON Rental.Rental
@@ -1517,9 +1511,9 @@ END;
 GO
 
 
----- 
+
 -- Reactivate the trigger by re-updating completed rentals
---
+
 UPDATE Rental.Rental
 SET rental_status = 'Completed'
 WHERE rental_status = 'Completed';
@@ -1550,14 +1544,14 @@ INSERT INTO Finance.Refund (
     payment_id, refund_date, refund_amount, refund_reason, refund_status
 )
 VALUES
--- 🔹 Security Deposit Refunds (Full refunds)
+-- Security Deposit Refunds (Full refunds)
 (1, GETDATE(), 300.00, 'Security deposit refund - vehicle returned in good condition', 'Processed'),
 (2, GETDATE(), 300.00, 'Security deposit refund - vehicle returned in good condition', 'Processed'),
 (3, GETDATE(), 300.00, 'Security deposit refund - vehicle returned in good condition', 'Processed'),
 (4, GETDATE(), 200.00, 'Partial refund - minor scratch fee deducted from deposit', 'Processed'),
 (5, GETDATE(), 300.00, 'Security deposit refund - vehicle returned in good condition', 'Processed'),
 
--- 🔹 Other Refunds
+-- Other Refunds
 (6, GETDATE(), 120.00, 'Early return refund - 1 unused day credited', 'Processed'),
 (7, GETDATE(), 100.00, 'Service issue refund - delay due to vehicle maintenance', 'Processed');
 GO
@@ -2087,7 +2081,7 @@ VALUES
 GO
 
 --------------------------------------------------------
--- ✅ Verified Vehicle.Damage Table
+-- Verified Vehicle.Damage Table
 --------------------------------------------------------
 CREATE TABLE Vehicle.Damage (
     damage_id INT IDENTITY(1,1) PRIMARY KEY,
@@ -2129,7 +2123,7 @@ VALUES
 GO
 
 --------------------------------------------------------
--- ✅ Create Vehicle.Maintenance_Record Table
+-- Create Vehicle.Maintenance_Record Table
 --------------------------------------------------------
 CREATE TABLE Vehicle.Maintenance_Record (
     maintenance_id INT IDENTITY(1,1) PRIMARY KEY,
@@ -2183,7 +2177,7 @@ VALUES
 GO
 
 --------------------------------------------------------
--- ✅ Fixed Vehicle.Maintenance_Inspection Table
+-- Vehicle.Maintenance_Inspection Table
 -- (Prevents multiple cascade paths)
 --------------------------------------------------------
 CREATE TABLE Vehicle.Maintenance_Inspection (
@@ -2207,7 +2201,7 @@ CREATE TABLE Vehicle.Maintenance_Inspection (
     CONSTRAINT FK_MI_Inspection 
         FOREIGN KEY (inspection_id) 
         REFERENCES Vehicle.Inspection(inspection_id)
-        ON DELETE NO ACTION     -- ✅ prevent multiple cascade paths
+        ON DELETE NO ACTION     
         ON UPDATE NO ACTION
 );
 GO
@@ -2231,7 +2225,7 @@ VALUES
 GO
 
 --------------------------------------------------------
--- ✅ Create Vehicle.Vehicle_Insurance Table
+-- Create Vehicle.Vehicle_Insurance Table
 --------------------------------------------------------
 CREATE TABLE Vehicle.Vehicle_Insurance (
     insurance_id INT IDENTITY(1,1) PRIMARY KEY,
@@ -2613,3 +2607,4 @@ VALUES
 (14, '330 Forest St', 'Unit 4C', 'Madison', 'WI', '53703', 'USA'),
 (15, '650 North St', NULL, 'Rochester', 'MN', '55901', 'USA');
 GO
+
