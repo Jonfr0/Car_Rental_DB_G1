@@ -29,7 +29,7 @@ BEGIN
         v.mileage
     FROM Rental.Rental AS r
     JOIN Vehicle.Vehicle AS v
-        ON r.vehicle_vin = v.vehicle_vin
+        ON r.vehicle_id = v.vehicle_id
     WHERE r.customer_id = @CustomerID
     ORDER BY r.rental_start DESC;
 END;
