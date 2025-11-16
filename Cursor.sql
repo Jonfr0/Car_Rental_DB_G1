@@ -23,5 +23,4 @@ END
 
 CLOSE rental_cursor;
 DEALLOCATE rental_cursor; 
-DEALLOCATE rental_cursor;
 

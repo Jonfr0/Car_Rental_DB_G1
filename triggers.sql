@@ -121,3 +121,28 @@ BEGIN
     DEALLOCATE damage_cursor;
 END;
 GO
+
+
+------------------------------------------------------
+-- AFTER DELETE Trigger to Prevent Data Deletion
+--------------------------------------------------------
+CREATE OR ALTER TRIGGER trg_PreventVehicleTransferDeletion
+ON Vehicle.Vehicle_Transfer
+AFTER DELETE
+AS
+BEGIN
+   SET NOCOUNT ON;
+  
+   -- Check if any rows were actually deleted
+   IF EXISTS (SELECT 1 FROM deleted)
+   BEGIN
+       -- Rollback the transaction
+       ROLLBACK TRANSACTION;
+      
+       -- Throw an error message
+       THROW 50001, 'ERROR: Data deletion is not allowed on Vehicle_Transfer table for data integrity purposes. Please contact your database administrator if you need to remove records.', 1;
+   END
+END;
+GO
+
+
