@@ -26,20 +26,20 @@ VALUES (1, 17, 'David', 'Robert', 'Williams', 'david.williams@carrental.com', '5
 
 -- User account for CEO (Michael Bennett)
 INSERT INTO Operation.[User] (employee_id, username, password, account_status)
-VALUES (51, 'ceo_mbennett', '', 'Active'); 
+VALUES (49, 'ceo_mbennett', '', 'Active'); 
 
 -- User account for CFO (Angela Smith)
 INSERT INTO Operation.[User] (employee_id, username, password, account_status)
-VALUES (52, 'cfo_asmith', '', 'Active');
+VALUES (50, 'cfo_asmith', '', 'Active');
 
 -- User account for VP of Finance (Jorge Garcia)
 INSERT INTO Operation.[User] (employee_id, username, password, account_status)
-VALUES (53, 'vpfin_jgarcia', '', 'Active'); 
+VALUES (51, 'vpfin_jgarcia', '', 'Active'); 
 
 -- User account for VP of Operations (Sarah Chen) - Admin access but NO revenue reporting
 INSERT INTO Operation.[User] (employee_id, username, password, account_status)
-VALUES (54, 'vpops_schen', '', 'Active');
+VALUES (52, 'vpops_schen', '', 'Active');
 
 -- User account for IT Administrator (David Williams) - Admin access but NO revenue reporting
 INSERT INTO Operation.[User] (employee_id, username, password, account_status)
-VALUES (55, 'itadmin_dwilliams', '', 'Active');
+VALUES (53, 'itadmin_dwilliams', '', 'Active');

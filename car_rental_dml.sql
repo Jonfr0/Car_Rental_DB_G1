@@ -3431,18 +3431,3 @@ VALUES
 (95, 8, 11, '2025-11-16 17:00:00', 'Maintenance transfer', 'Pending', NULL),
 (18, 10, 1, '2025-11-16 18:00:00', 'Inventory rebalancing', 'Pending', NULL);
 GO
-
---------------------------------------------------------
--- Insert Sample Data into Operation.User (Admin users only per BR-52)
---------------------------------------------------------
--- Note: Only employees with Admin access level can have user accounts
--- Passwords are placeholder hashed values for demonstration
-INSERT INTO Operation.[User] (employee_id, username, password, account_status)
-VALUES
--- Employee ID 1 is Michael Thompson, role_id 7 (Accountant - Admin)
-(1, 'mthompson', 'hashed_password_placeholder_001', 'Active'),
--- Employee ID 2 is Sarah Johnson, role_id 9 (IT Support - Admin)
-(2, 'sjohnson', 'hashed_password_placeholder_002', 'Active'),
--- Employee ID 10 is Robert White, role_id 10 (Regional Director - Admin)
-(10, 'rwhite', 'hashed_password_placeholder_003', 'Active');
-GO
